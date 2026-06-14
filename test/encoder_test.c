@@ -1,9 +1,9 @@
 #include "module.h"
 #include "encoder_test.h"
 #include "app_usart2.h"
-#include "delay.h"
 #include "app_encoder.h"
 #include "Kalman.h"
+#include "include.h"
 
 //
 // @简介：对编码器的位置信号进行测试
@@ -56,6 +56,8 @@ void Encoder_M_Method_Test(void) // main
 	}
 }
 
+un16_t data;
+
 //
 // @简介：T法测速的测试代码
 //        通过串口把T法测速的Omega值发送到Vofa显示
@@ -65,6 +67,7 @@ void Encoder_T_Method_Test(void)
 //	App_USART3_Init();
 //	App_Encoder_Init();
 	float omega_l,omega_r;
+    data.hword = 0x1234;
 //	while(1)
 //	{
 //		Delay(1);
@@ -77,4 +80,4 @@ void Encoder_T_Method_Test(void)
 //	}
 }
 
-task_register("key", Encoder_T_Method_Test, 1);          /*T法测试任务, 1KHZ*/
+//task_register("key", Encoder_T_Method_Test, 1);          /*T法测试任务, 1KHZ*/

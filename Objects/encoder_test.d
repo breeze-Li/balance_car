@@ -1,5 +1,5 @@
 .\objects\encoder_test.o: test\encoder_test.c
-.\objects\encoder_test.o: .\my_lib\moudel\module.h
+.\objects\encoder_test.o: .\framework\module.h
 .\objects\encoder_test.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\stdbool.h
 .\objects\encoder_test.o: test\encoder_test.h
 .\objects\encoder_test.o: .\std_periph_driver\inc\stm32f10x.h
@@ -35,6 +35,7 @@
 .\objects\encoder_test.o: .\std_periph_driver\inc\stm32f10x_wwdg.h
 .\objects\encoder_test.o: .\user\app_usart2.h
 .\objects\encoder_test.o: .\my_lib\usart.h
-.\objects\encoder_test.o: .\my_lib\delay.h
 .\objects\encoder_test.o: .\user\app_encoder.h
 .\objects\encoder_test.o: .\my_lib\Kalman.h
+.\objects\encoder_test.o: .\user\include.h
+.\objects\encoder_test.o: .\my_lib\delay.h

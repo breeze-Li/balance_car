@@ -1,5 +1,5 @@
-.\objects\module.o: my_lib\moudel\module.c
-.\objects\module.o: my_lib\moudel\module.h
+.\objects\module.o: framework\module.c
+.\objects\module.o: framework\module.h
 .\objects\module.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\stdbool.h
 .\objects\module.o: .\my_lib\delay.h
 .\objects\module.o: .\std_periph_driver\inc\stm32f10x.h

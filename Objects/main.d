@@ -32,7 +32,7 @@
 .\objects\main.o: .\std_periph_driver\inc\stm32f10x_wwdg.h
 .\objects\main.o: .\test\bat_test.h
 .\objects\main.o: user\app_bat.h
-.\objects\main.o: .\my_lib\moudel\module.h
+.\objects\main.o: .\framework\module.h
 .\objects\main.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\stdbool.h
 .\objects\main.o: user\app_button.h
 .\objects\main.o: user\app_pwm.h

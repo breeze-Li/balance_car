@@ -1,25 +1,12 @@
 #include "app_pwm.h"
+#include "module.h"
 
     /**TIM3 GPIO Configuration    
-    bin1-> PA6     ------> TIM3_CH1
-    ain1-> PA7     ------> TIM3_CH2 
-    ain2-> PA3     ------> TIM3_CH3 
-		bin2-> PA4     ------> TIM3_CH4
+    bin1-> PA6          ------> TIM3_CH1
+    ain1-> PA7          ------> TIM3_CH2 
+    ain2-> PA3-> B0     ------> TIM3_CH3 
+	bin2-> PA4-> B1     ------> TIM3_CH4
     */
-		
-static void STBY_Pin_Init(void);
-static void Motor_L_Init(void); // 左电机的初始化
-static void Motor_R_Init(void); // 右电机的初始化
-
-//
-// @简介：对TB6612进行初始化
-//
-void App_PWM_Init(void)
-{
-	//STBY_Pin_Init(); // STBY引脚初始化
-	Motor_L_Init(); // 对左电机初始化
-	Motor_R_Init(); // 对右左电机初始化
-}
 
 //
 // @简介：控制TB6612进入休眠状态或者活动状态
@@ -43,7 +30,7 @@ void App_PWM_Cmd(uint8_t on)
 //
 // @简介：设置左电机的占空比
 // @参数：duty - 占空比的具体值，范围-100.0f ~ +100.0f
-//
+// @note: duty > 0 左轮胎前进，反之后退
 void App_PWM_Set_L(float Duty)
 {
 	float sign; // 符号，正数 - +1， 负数 - -1
@@ -52,27 +39,23 @@ void App_PWM_Set_L(float Duty)
 	else sign = -1;
 	
 	Duty = fabsf(Duty);
-	
-	if(sign < 0) // 反转
+	uint16_t ccr = (100.0f - Duty) / 100.0f * 999;
+	if(sign >= 0) // 前进方向
 	{
-		GPIO_WriteBit(GPIOA, GPIO_Pin_9, Bit_SET);    // AIN1 - 高
-		GPIO_WriteBit(GPIOA, GPIO_Pin_10, Bit_RESET); // AIN2 - 低
+        TIM_SetCompare2(TIM3, 999);
+        TIM_SetCompare3(TIM3, ccr);
 	}
 	else
 	{
-		GPIO_WriteBit(GPIOA, GPIO_Pin_9,  Bit_RESET);  // AIN1 - 低
-		GPIO_WriteBit(GPIOA, GPIO_Pin_10, Bit_SET);    // AIN2 - 高
+        TIM_SetCompare3(TIM3, 999);
+        TIM_SetCompare2(TIM3, ccr);
 	}
-	
-	uint16_t ccr = Duty / 100.0f * 999;
-	
-	TIM_SetCompare1(TIM1, ccr);
 }
 
 //
 // @简介：设置右电机的占空比
 // @参数：duty - 占空比的具体值，范围-100.0f ~ +100.0f
-//
+// @note: duty > 0 右轮胎前进，反之后退
 void App_PWM_Set_R(float Duty)
 {
 	float sign; // 符号，正数 - +1， 负数 - -1
@@ -81,154 +64,90 @@ void App_PWM_Set_R(float Duty)
 	else sign = -1;
 	
 	Duty = fabsf(Duty);
-	
-	if(sign >= 0) // 正转
+	uint16_t ccr = (100.0f - Duty) / 100.0f * 999;
+	if(sign >= 0) // 前进方向
 	{
-		GPIO_WriteBit(GPIOB, GPIO_Pin_5, Bit_SET);    // BIN1 - 高
-		GPIO_WriteBit(GPIOB, GPIO_Pin_7, Bit_RESET);  // BIN2 - 低
+        TIM_SetCompare1(TIM3, 999);
+        TIM_SetCompare4(TIM3, ccr);
 	}
 	else
 	{
-		GPIO_WriteBit(GPIOB, GPIO_Pin_5, Bit_RESET);  // BIN1 - 低
-		GPIO_WriteBit(GPIOB, GPIO_Pin_7, Bit_SET);    // BIN2 - 高
+        TIM_SetCompare4(TIM3, 999);
+        TIM_SetCompare1(TIM3, ccr);
 	}
-	
-	uint16_t ccr = Duty / 100.0f * 999;
-	
-	TIM_SetCompare1(TIM4, ccr);
 }
 
 //
-// @简介：初始化STBY引脚
-//        PA1 - Out_PP
+// @简介：电机硬件初始化
+//        AIN1 - PA7 PB0 - Out_PP
+//        AIN2 - PA6 PB1 - Out_PP
 //
-static void STBY_Pin_Init(void)
-{
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE); // 使能GPIOA的时钟
-	
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	
-	GPIO_Init(GPIOA, &GPIO_InitStruct);
-}
-
-//
-// @简介：左电机初始化
-//        AIN1 - PA9 - Out_PP
-//        AIN2 - PA10 - Out_PP
-//
-static void Motor_L_Init(void)
+void App_PWM_Init(void)
 {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 	
-	// 初始化AIN1和AIN2
+	// 初始化4路GPIO
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,  ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_10;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+	//A3 A4硬件跳线连接B0 B1,设置成高阻态
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AIN;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	
 	GPIO_Init(GPIOA, &GPIO_InitStruct);
-	
-	// 初始化PWM
-	// 初始化PA8 - AF_PP
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8;
+    //A6 A7
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz; 
-	
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStruct);
+	//B0 B1
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
+    GPIO_Init(GPIOB, &GPIO_InitStruct);
 	
-	// 对定时器1进行初始化
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE); // 开启定时器1的时钟
+    // 初始化PWM
+	// 对定时器3进行初始化
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE); // 开启定时器3的时钟
 	
 	// 设置时基单元的参数
-	
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct = {0};
-	
 	TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseInitStruct.TIM_Period = 999;
 	TIM_TimeBaseInitStruct.TIM_Prescaler = 0;
 	TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
+	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct);
 	
-	TIM_TimeBaseInit(TIM1, &TIM_TimeBaseInitStruct);
+	// 配置4路输出比较
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable;
+    TIM_OCInitStructure.TIM_Pulse = 0;
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+    TIM_OCInitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
+    TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
+    TIM_OCInitStructure.TIM_OCNIdleState = TIM_OCIdleState_Reset;
 	
-	// 配置输出比较
-	TIM_OCInitTypeDef TIM_OCInitStruct = {0};
-	
-	TIM_OCInitStruct.TIM_OCMode = TIM_OCMode_PWM1;
-	TIM_OCInitStruct.TIM_OCPolarity = TIM_OCPolarity_High;
-	TIM_OCInitStruct.TIM_OutputState = ENABLE;
-	TIM_OCInitStruct.TIM_Pulse = 0;
-	
-	TIM_OC1Init(TIM1, &TIM_OCInitStruct);
-	
+    TIM_OC1Init(TIM3, &TIM_OCInitStructure);
+    TIM_OC2Init(TIM3, &TIM_OCInitStructure);
+    TIM_OC3Init(TIM3, &TIM_OCInitStructure);
+    TIM_OC4Init(TIM3, &TIM_OCInitStructure);
 	// 配置MOE的开关
-	TIM_CtrlPWMOutputs(TIM1, ENABLE);
+	TIM_CtrlPWMOutputs(TIM3, ENABLE);
 	
 	// 闭合定时器的总开关
-	TIM_Cmd(TIM1, ENABLE);
+	TIM_Cmd(TIM3, ENABLE);
+}
+int pwmR,pwmL;
+void PWM_Test1(void) // main
+{
+    static int state_count = 0;
+	state_count++;
+    state_count = state_count % 3;
+	
+    App_PWM_Set_L(pwmL);
+    App_PWM_Set_R(pwmR);
+    
 }
 
-//
-// @简介：右电机初始化
-//        BIN1 - PB5 - Out_PP
-//        BIN2 - PB7 - Out_PP
-//
-static void Motor_R_Init(void)
-{
-	GPIO_InitTypeDef GPIO_InitStruct = {0};
-//	
-//	// 初始化BIN1和BIN2
-//	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-//	
-//	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_7;
-//	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
-//	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-//	
-//	GPIO_Init(GPIOB, &GPIO_InitStruct);
-	
-	// 初始化PWM
-	// 初始化PB6 - AF_PP
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz; 
-	
-	GPIO_Init(GPIOB, &GPIO_InitStruct);
-	
-	// 对定时器4进行初始化
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE); // 开启定时器4的时钟
-	
-	// 设置时基单元的参数
-	
-	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct = {0};
-	
-	TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInitStruct.TIM_Period = 999;
-	TIM_TimeBaseInitStruct.TIM_Prescaler = 0;
-	TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
-	
-	TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStruct);
-	
-	// 配置输出比较
-	TIM_OCInitTypeDef TIM_OCInitStruct = {0};
-	
-	TIM_OCInitStruct.TIM_OCMode = TIM_OCMode_PWM1;
-	TIM_OCInitStruct.TIM_OCPolarity = TIM_OCPolarity_High;
-	TIM_OCInitStruct.TIM_OutputState = ENABLE;
-	TIM_OCInitStruct.TIM_Pulse = 0;
-	
-	TIM_OC1Init(TIM4, &TIM_OCInitStruct);
-	
-	// 配置MOE的开关
-	TIM_CtrlPWMOutputs(TIM4, ENABLE);
-	
-	// 闭合定时器的总开关
-	TIM_Cmd(TIM4, ENABLE);
-}
+driver_init("PWM", App_PWM_Init);           /*电机硬件初始化*/
+task_register("PWM", PWM_Test1, 2000);      /*测试任务, 2s*/

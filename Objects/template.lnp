@@ -7,6 +7,7 @@
 ".\objects\app_button.o"
 ".\objects\app_pwm.o"
 ".\objects\app_encoder.o"
+".\objects\led.o"
 ".\objects\startup_stm32f10x_md.o"
 ".\objects\misc.o"
 ".\objects\stm32f10x_adc.o"
@@ -40,11 +41,14 @@
 ".\objects\spi.o"
 ".\objects\qmath.o"
 ".\objects\pid.o"
-".\objects\module.o"
 ".\objects\kalman.o"
 ".\objects\bat_test.o"
 ".\objects\pwm_test.o"
 ".\objects\encoder_test.o"
+".\objects\blink.o"
+".\objects\module.o"
+".\objects\filter.o"
+".\objects\mpu6050.o"
 --library_type=microlib --strict --scatter ".\Objects\template.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

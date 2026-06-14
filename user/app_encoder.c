@@ -91,9 +91,11 @@ float App_Encoder_GetSpeed_L(void)
         speed_L = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f;
     }
 #if (FILTER_MODE == filter_LowPass)
+    #warning "FILTER_MODE is LOWPASS"
 	speed_L = ALPHA * speed_L + (1-ALPHA)*speed_LL;
 	speed_LL = speed_L;
 #elif (FILTER_MODE == filter_kalman)
+    #warning "FILTER_MODE is KALMAN"
     speed_L = Kalman_clc(&Kalman_L, speed_L);
 #endif
 	return speed_L;

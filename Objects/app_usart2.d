@@ -1,5 +1,5 @@
 .\objects\app_usart2.o: user\app_usart2.c
-.\objects\app_usart2.o: .\my_lib\moudel\module.h
+.\objects\app_usart2.o: .\framework\module.h
 .\objects\app_usart2.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\stdbool.h
 .\objects\app_usart2.o: user\app_usart2.h
 .\objects\app_usart2.o: .\std_periph_driver\inc\stm32f10x.h

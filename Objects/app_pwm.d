@@ -31,4 +31,6 @@
 .\objects\app_pwm.o: .\std_periph_driver\inc\stm32f10x_tim.h
 .\objects\app_pwm.o: .\std_periph_driver\inc\stm32f10x_usart.h
 .\objects\app_pwm.o: .\std_periph_driver\inc\stm32f10x_wwdg.h
+.\objects\app_pwm.o: .\framework\module.h
+.\objects\app_pwm.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\stdbool.h
 .\objects\app_pwm.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\math.h
