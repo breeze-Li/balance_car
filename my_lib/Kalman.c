@@ -1,7 +1,7 @@
 #include "Kalman.h"
 
 // 初始化滤波器
-void Kalman_Init(KalmanSpeedFilter *kf, float dt) {
+void Kalman_Init(volatile KalmanSpeedFilter *kf, float dt) {
     // 初始状态：速度为0，加速度为0
     kf->x[0] = 0.0f;
     kf->x[1] = 0.0f;
@@ -37,7 +37,7 @@ void Kalman_Init(KalmanSpeedFilter *kf, float dt) {
 }
 
 // 卡尔曼预测步
-void Kalman_Predict(KalmanSpeedFilter *kf) {
+void Kalman_Predict(volatile KalmanSpeedFilter *kf) {
     // 临时变量存储新的P
     float new_P[2][2];
     
@@ -68,7 +68,7 @@ void Kalman_Predict(KalmanSpeedFilter *kf) {
 }
 
 // 卡尔曼更新步
-void Kalman_Update(KalmanSpeedFilter *kf, float z_measured) {
+void Kalman_Update(volatile KalmanSpeedFilter *kf, float z_measured) {
     // 1. 计算卡尔曼增益: K = P * H^T * (H * P * H^T + R)^-1
     // 简化计算（因为H是[1,0]）
     float S = kf->P[0][0] + kf->R;  // S = H*P*H^T + R
@@ -94,7 +94,7 @@ void Kalman_Update(KalmanSpeedFilter *kf, float z_measured) {
 //
 // @简介：更新函数，以dt周期调用
 // 
-float Kalman_clc(KalmanSpeedFilter *kf, float raw_speed) {
+float Kalman_clc(volatile KalmanSpeedFilter *kf, float raw_speed) {
     // 预测步（假设每次调用时间间隔固定）
     Kalman_Predict(kf);
     // 更新步（使用测量值）

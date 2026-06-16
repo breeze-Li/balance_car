@@ -20,12 +20,12 @@ typedef struct {
 } KalmanSpeedFilter;
 
 // 初始化滤波器
-void Kalman_Init(KalmanSpeedFilter *kf, float dt);
+void Kalman_Init(volatile KalmanSpeedFilter *kf, float dt);
 // 卡尔曼预测步
-void Kalman_Predict(KalmanSpeedFilter *kf);
+void Kalman_Predict(volatile KalmanSpeedFilter *kf);
 // 卡尔曼更新步
-void Kalman_Update(KalmanSpeedFilter *kf, float z_measured);
-float Kalman_clc(KalmanSpeedFilter *kf, float raw_speed);
+void Kalman_Update(volatile KalmanSpeedFilter *kf, float z_measured);
+float Kalman_clc(volatile KalmanSpeedFilter *kf, float raw_speed);
 
 
 #endif

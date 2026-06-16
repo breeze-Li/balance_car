@@ -1,42 +1,46 @@
-#include "module.h"
+#include "include.h"
 #include "app_encoder.h"
 #include "delay.h"
-#include "app_usart2.h"
 
-//#define EN_KALMAN_R
-//#define EN_KALMAN_L     //左轮卡尔曼绿波开启
+static volatile encoder_t encoder_R;    //右轮电机编码器实例
+static volatile encoder_t encoder_L;    //左轮电机编码器实例
 
-#define filter_none     0       //无滤波
-#define filter_kalman   1       //卡尔曼滤波
-#define filter_LowPass  2       //一阶低通滤波
-#define ALPHA 0.1               //一阶低通绿波系数
-#define FILTER_MODE     1       //卡尔曼模式
-
-static volatile int64_t encoder_l = 0; // 左电机编码器的值
-static volatile int64_t encoder_r = 0; // 右电机编码器的值
-static volatile int8_t direction_l = 1; // 左电机旋转的方向，1 - 正转，-1 - 反转
-static volatile int8_t direction_r = 1; // 右电机旋转的方向，1 - 正转，-1 - 反转
-static volatile uint64_t t0_l = 0, t1_l = 0; // 左电机编码器发生变化的时间，单位us
-static volatile uint64_t t0_r = 0, t1_r = 0; // 右电机编码器发生变化的时间，单位us
-
-float speed_L,speed_LL,speed_R,speed_RL;			//left,left_last,right,right_left
-KalmanSpeedFilter Kalman_R,Kalman_L;
-
-static void Encoder_L_Init(void); // 左编码器初始化
-static void Encoder_R_Init(void); // 右编码器初始化
-float Kalman_GetSpeed(KalmanSpeedFilter *kf, float raw_speed);
-float Kalman_GetSpeed_R(void);
-float Kalman_GetSpeed_L(void);
+static void Encoder_L_Init(void); // 左编码器硬件初始化
+static void Encoder_R_Init(void); // 右编码器硬件初始化
+static void App_EncoderInst_Init(volatile encoder_t *this, FCT_VOID hwInit, UINT8_FCT readA, UINT8_FCT readB);
+static uint8_t encoder_R_ReadA(void);
+static uint8_t encoder_R_ReadB(void);
+static uint8_t encoder_L_ReadA(void);
+static uint8_t encoder_L_ReadB(void);
 
 //
 // @简介：对编码器模块进行初始化
 //
 void App_Encoder_Init(void)
 {
-    Kalman_Init(&Kalman_R, 0.001f);
-    Kalman_Init(&Kalman_L, 0.001f);
-	Encoder_L_Init(); 
-	Encoder_R_Init(); 
+    App_EncoderInst_Init(&encoder_R, Encoder_R_Init, encoder_R_ReadA, encoder_R_ReadB);
+    App_EncoderInst_Init(&encoder_L, Encoder_L_Init, encoder_L_ReadA, encoder_L_ReadB);
+}
+
+//简介：初始化编码器对象 
+//参数：对象 硬件初始化 A相读取 B相读取
+static void App_EncoderInst_Init(volatile encoder_t *this, FCT_VOID hwInit, UINT8_FCT readA, UINT8_FCT readB)
+{
+    if(hwInit == NULL) return;
+    hwInit();
+    this->hw_ReadA  = readA;
+    this->hw_ReadB  = readB;
+    
+    this->encoder   = 0;
+    this->direction = 1;
+    this->t0        = 0;
+    this->t1        = 0;
+#if (FILTER_MODE    == filter_LowPass)
+	this->speed     = 0;
+	this->speed_Last = 0;
+#elif (FILTER_MODE == filter_kalman)
+    Kalman_Init(&this->Kalman, 0.001f);
+#endif
 }
 
 //
@@ -44,7 +48,7 @@ void App_Encoder_Init(void)
 //
 float App_Encoder_GetPos_L(void)
 {
-	return encoder_l / 22.0f / (30613.0f / 1500.0f) * 360.0f; 
+	return encoder_L.encoder / 22.0f / (30613.0f / 1500.0f) * 360.0f; 
 }
 
 //
@@ -52,28 +56,28 @@ float App_Encoder_GetPos_L(void)
 //
 float App_Encoder_GetPos_R(void)
 {
-	return encoder_r / 22.0f / (30613.0f / 1500.0f) * 360.0f; 
+	return encoder_R.encoder / 22.0f / (30613.0f / 1500.0f) * 360.0f; 
 }
 
 //
-// @简介：读取左轮胎旋转的角速度，omega的值，单位是 度/s
-// 
-float App_Encoder_GetSpeed_L(void)
+// @简介：读取轮胎旋转的角速度，omega的值，单位是 度/s
+// @参数：编码器对象指针
+static float App_Encoder_GetSpeed(volatile encoder_t *this)
 {
 	__disable_irq(); // 关闭单片机的总中断
 	
-	int8_t direction_cpy = direction_l;
-	uint64_t t0_cpy = t0_l;
-	uint64_t t1_cpy = t1_l;
+	int8_t direction_cpy = this->direction;
+	uint64_t t0_cpy = this->t0;
+	uint64_t t1_cpy = this->t1;
 	
 	__enable_irq(); // 开启单片机的总中断
 	
 	if(direction_cpy == +2 || direction_cpy == -2)
 	{
 #if (FILTER_MODE == filter_LowPass)
-		speed_LL = 0;
+		this->speed_Last = 0;
 #endif
-		speed_L = 0.0f;
+		this->speed = 0.0f;
 	}
     else
     {
@@ -89,67 +93,37 @@ float App_Encoder_GetSpeed_L(void)
         {
             T = (now - t0_cpy) * 1.0e-6f;
         }
-        speed_L = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f;
+        this->speed = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f;
     }
 #if (FILTER_MODE == filter_LowPass)
     #warning "FILTER_MODE is LOWPASS"
-	speed_L = ALPHA * speed_L + (1-ALPHA)*speed_LL;
-	speed_LL = speed_L;
+	this->speed = ALPHA * this->speed + (1-ALPHA)*this->speed_Last;
+	this->speed_Last = this->speed;
 #elif (FILTER_MODE == filter_kalman)
     #warning "FILTER_MODE is KALMAN"
-    speed_L = Kalman_clc(&Kalman_L, speed_L);
+    this->speed = Kalman_clc(&this->Kalman, this->speed);
 #endif
-	return speed_L;
+	return this->speed;
 }
 
+//
+// @简介：读取左轮胎旋转的角速度，omega的值，单位是 度/s
+//
+float App_Encoder_GetSpeed_L(void)
+{
+    return App_Encoder_GetSpeed(&encoder_L);
+}
 //
 // @简介：读取右轮胎旋转的角速度，omega的值，单位是 度/s
 // 
 float App_Encoder_GetSpeed_R(void)
 {
-	__disable_irq(); // 关闭单片机的总中断
-	
-	int8_t direction_cpy = direction_r;
-	uint64_t t0_cpy = t0_r;
-	uint64_t t1_cpy = t1_r;
-	
-	__enable_irq(); // 开启单片机的总中断
-	
-	if(direction_cpy == +2 || direction_cpy == -2)
-	{
-#if (FILTER_MODE == filter_LowPass)
-		speed_RL = 0;
-#endif
-		speed_R = 0.0f;
-	}
-    else
-    {
-        uint64_t now = GetUs();
-        
-        float T;
-        
-        if(t0_cpy - t1_cpy > now - t0_cpy)
-        {
-            T = (t0_cpy - t1_cpy) * 1.0e-6f;
-        }
-        else
-        {
-            T = (now - t0_cpy) * 1.0e-6f;
-        }
-//        My_USART_Printf(USART3, "%d\n", direction_r);
-        speed_R = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f;
-    }
-#if (FILTER_MODE == filter_LowPass)
-	speed_R = ALPHA * speed_R + (1-ALPHA)*speed_RL;
-	speed_RL = speed_R;
-#elif (FILTER_MODE == filter_kalman)
-    speed_R = Kalman_clc(&Kalman_R, speed_R);
-#endif
-    return speed_R;
+    //电机对称安装，其中一项要取反，才能保证两轮的前进和后退一致。按自己定义的来
+    return -App_Encoder_GetSpeed(&encoder_R);
 }
 
 //
-// @简介：左编码器初始化
+// @简介：左编码器硬件初始化
 //
 static void Encoder_L_Init(void)
 {
@@ -191,7 +165,7 @@ static void Encoder_L_Init(void)
 }
 
 //
-// @简介：右编码器初始化
+// @简介：右编码器硬件初始化
 //
 static void Encoder_R_Init(void)
 {
@@ -236,53 +210,71 @@ static void Encoder_R_Init(void)
 	NVIC_Init(&NVIC_InitStruct);
 }
 
+
+static uint8_t encoder_R_ReadA(void)
+{
+    return GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0); // A相的当前电压
+}
+static uint8_t encoder_R_ReadB(void)
+{
+    return GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1); // B相的当前电压
+}
+static uint8_t encoder_L_ReadA(void)
+{
+    return GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6); // A相的当前电压
+}
+static uint8_t encoder_L_ReadB(void)
+{
+    return GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_7); // B相的当前电压
+}
+
+
+//简介：编码器中断回调函数
+//参数：编码器对象指针
+void Encoder_Irq(volatile encoder_t *this)
+{
+    this->t1 = this->t0;
+	this->t0 = GetUs();
+	
+	uint8_t a = this->hw_ReadA(); // A相的当前电压
+	uint8_t b = this->hw_ReadB(); // B相的当前电压
+	
+	if((a == Bit_SET && b == Bit_RESET) || (a == Bit_RESET && b == Bit_SET)) // 现在轮胎正转
+	{
+		this->encoder--;
+		
+		if(this->direction > 0) // 之前轮胎是正转
+		{
+			this->direction = -2;
+		}
+		else
+		{
+			this->direction = -1;
+		}
+	}
+	else // 现在轮胎是反转
+	{
+        this->encoder++;
+		
+		if(this->direction < 0) // 之前轮胎是反转
+		{
+			this->direction = +2;
+		}
+		else
+		{
+			this->direction = 1;
+		}
+	}
+}
+
 //
-// @简介：EXTI3的中断响应函数，对应左编码器的A相
+// @简介：EXTI3的中断响应函数，对应右编码器的A相
 //
 void EXTI0_IRQHandler(void)
 {
 	EXTI_ClearFlag(EXTI_Line0); // 对中断标志位清零
 	
-    uint64_t now = GetUs();
-    uint64_t dt = now - t0_l;
-    // 记录异常短脉冲，90%占空比的中断间隔为300us
-    if(dt < 300) return;
-    
-	t1_l = t0_l;
-	t0_l = GetUs();
-//    My_USART_Printf(USART3,"%d\n", t0_l - t1_l);
-	
-	uint8_t a = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0); // A相的当前电压
-	uint8_t b = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1); // B相的当前电压
-	
-	if((a == Bit_SET && b == Bit_RESET) || (a == Bit_RESET && b == Bit_SET)) // 现在轮胎正转
-	{
-		encoder_l++;
-		
-		if(direction_l < 0) // 之前轮胎是反转
-		{
-			direction_l = +1;
-//            My_USART_Printf(USART3, "%d\n", direction_l);
-		}
-		else
-		{
-			direction_l = 1;
-		}
-	}
-	else // 现在轮胎是反转
-	{
-		encoder_l--;
-		
-		if(direction_l > 0) // 之前轮胎是正转
-		{
-			direction_l = -1;
-//            My_USART_Printf(USART3, "%d\n", direction_l);
-		}
-		else
-		{
-			direction_l = -1;
-		}
-	}
+    Encoder_Irq(&encoder_R);
 }
 
 //
@@ -293,39 +285,8 @@ void EXTI9_5_IRQHandler(void)
 	if(EXTI_GetFlagStatus(EXTI_Line6) == SET)
 	{
 		EXTI_ClearFlag(EXTI_Line6); // 对标志位进行清零
-		
-		t1_r = t0_r;
-		t0_r = GetUs();
-		
-		uint8_t a = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6); // A相的当前电压
-		uint8_t b = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_7); // B相的当前电压
-		
-		if((a == Bit_SET && b == Bit_RESET) || (a == Bit_RESET && b == Bit_SET)) // 现在轮胎反转
-		{
-			encoder_r--;
-			
-			if(direction_r > 0) // 之前轮胎是正转
-			{
-				direction_r = -2;
-			}
-			else
-			{
-				direction_r = -1;
-			}
-		}
-		else // 现在轮胎是正转
-		{
-			encoder_r++;
-			
-			if(direction_r < 0) // 之前轮胎是反转，现在轮胎是正转
-			{
-				direction_r = +2;
-			}
-			else
-			{
-				direction_r = 1;
-			}
-		}
+        
+		Encoder_Irq(&encoder_L);
 	}
 }
 //
