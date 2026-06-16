@@ -8,6 +8,7 @@
 	bin2-> PA4-> B1     ------> TIM3_CH4
     */
 
+#define FULL_DUTY 7999
 //
 // @简介：控制TB6612进入休眠状态或者活动状态
 // @参数：on    0 - 休眠状态，向STBY写L
@@ -39,15 +40,15 @@ void App_PWM_Set_L(float Duty)
 	else sign = -1;
 	
 	Duty = fabsf(Duty);
-	uint16_t ccr = (100.0f - Duty) / 100.0f * 999;
+	uint16_t ccr = (100.0f - Duty) / 100.0f * FULL_DUTY;
 	if(sign >= 0) // 前进方向
 	{
-        TIM_SetCompare2(TIM3, 999);
+        TIM_SetCompare2(TIM3, FULL_DUTY);
         TIM_SetCompare3(TIM3, ccr);
 	}
 	else
 	{
-        TIM_SetCompare3(TIM3, 999);
+        TIM_SetCompare3(TIM3, FULL_DUTY);
         TIM_SetCompare2(TIM3, ccr);
 	}
 }
@@ -64,15 +65,15 @@ void App_PWM_Set_R(float Duty)
 	else sign = -1;
 	
 	Duty = fabsf(Duty);
-	uint16_t ccr = (100.0f - Duty) / 100.0f * 999;
+	uint16_t ccr = (100.0f - Duty) / 100.0f * FULL_DUTY;
 	if(sign >= 0) // 前进方向
 	{
-        TIM_SetCompare1(TIM3, 999);
+        TIM_SetCompare1(TIM3, FULL_DUTY);
         TIM_SetCompare4(TIM3, ccr);
 	}
 	else
 	{
-        TIM_SetCompare4(TIM3, 999);
+        TIM_SetCompare4(TIM3, FULL_DUTY);
         TIM_SetCompare1(TIM3, ccr);
 	}
 }
@@ -91,10 +92,10 @@ void App_PWM_Init(void)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 	//A3 A4硬件跳线连接B0 B1,设置成高阻态
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AIN;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStruct);
+//    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_4;
+//	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AIN;
+//	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+//	GPIO_Init(GPIOA, &GPIO_InitStruct);
     //A6 A7
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
@@ -111,7 +112,7 @@ void App_PWM_Init(void)
 	// 设置时基单元的参数
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct = {0};
 	TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInitStruct.TIM_Period = 999;
+	TIM_TimeBaseInitStruct.TIM_Period = FULL_DUTY;
 	TIM_TimeBaseInitStruct.TIM_Prescaler = 0;
 	TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
 	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct);
@@ -137,7 +138,7 @@ void App_PWM_Init(void)
 	// 闭合定时器的总开关
 	TIM_Cmd(TIM3, ENABLE);
 }
-int pwmR,pwmL;
+int pwmR,pwmL = 20;
 void PWM_Test1(void) // main
 {
     static int state_count = 0;

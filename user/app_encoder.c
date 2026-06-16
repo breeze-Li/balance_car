@@ -1,6 +1,7 @@
 #include "module.h"
 #include "app_encoder.h"
 #include "delay.h"
+#include "app_usart2.h"
 
 //#define EN_KALMAN_R
 //#define EN_KALMAN_L     //左轮卡尔曼绿波开启
@@ -9,7 +10,7 @@
 #define filter_kalman   1       //卡尔曼滤波
 #define filter_LowPass  2       //一阶低通滤波
 #define ALPHA 0.1               //一阶低通绿波系数
-#define FILTER_MODE     2       //卡尔曼模式
+#define FILTER_MODE     1       //卡尔曼模式
 
 static volatile int64_t encoder_l = 0; // 左电机编码器的值
 static volatile int64_t encoder_r = 0; // 右电机编码器的值
@@ -135,7 +136,7 @@ float App_Encoder_GetSpeed_R(void)
         {
             T = (now - t0_cpy) * 1.0e-6f;
         }
-        
+//        My_USART_Printf(USART3, "%d\n", direction_r);
         speed_R = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f;
     }
 #if (FILTER_MODE == filter_LowPass)
@@ -236,42 +237,50 @@ static void Encoder_R_Init(void)
 }
 
 //
-// @简介：EXTI3的中断响应函数，对应右编码器的A相
+// @简介：EXTI3的中断响应函数，对应左编码器的A相
 //
 void EXTI0_IRQHandler(void)
 {
 	EXTI_ClearFlag(EXTI_Line0); // 对中断标志位清零
 	
-	t1_r = t0_r;
-	t0_r = GetUs();
+    uint64_t now = GetUs();
+    uint64_t dt = now - t0_l;
+    // 记录异常短脉冲，90%占空比的中断间隔为300us
+    if(dt < 300) return;
+    
+	t1_l = t0_l;
+	t0_l = GetUs();
+//    My_USART_Printf(USART3,"%d\n", t0_l - t1_l);
 	
 	uint8_t a = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0); // A相的当前电压
 	uint8_t b = GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1); // B相的当前电压
 	
 	if((a == Bit_SET && b == Bit_RESET) || (a == Bit_RESET && b == Bit_SET)) // 现在轮胎正转
 	{
-		encoder_r++;
+		encoder_l++;
 		
-		if(direction_r < 0) // 之前轮胎是反转
+		if(direction_l < 0) // 之前轮胎是反转
 		{
-			direction_r = +2;
+			direction_l = +1;
+//            My_USART_Printf(USART3, "%d\n", direction_l);
 		}
 		else
 		{
-			direction_r = 1;
+			direction_l = 1;
 		}
 	}
 	else // 现在轮胎是反转
 	{
-		encoder_r--;
+		encoder_l--;
 		
-		if(direction_r > 0) // 之前轮胎是正转
+		if(direction_l > 0) // 之前轮胎是正转
 		{
-			direction_r = -2;
+			direction_l = -1;
+//            My_USART_Printf(USART3, "%d\n", direction_l);
 		}
 		else
 		{
-			direction_r = -1;
+			direction_l = -1;
 		}
 	}
 }
@@ -285,38 +294,60 @@ void EXTI9_5_IRQHandler(void)
 	{
 		EXTI_ClearFlag(EXTI_Line6); // 对标志位进行清零
 		
-		t1_l = t0_l;
-		t0_l = GetUs();
+		t1_r = t0_r;
+		t0_r = GetUs();
 		
 		uint8_t a = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_6); // A相的当前电压
 		uint8_t b = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_7); // B相的当前电压
 		
 		if((a == Bit_SET && b == Bit_RESET) || (a == Bit_RESET && b == Bit_SET)) // 现在轮胎反转
 		{
-			encoder_l--;
+			encoder_r--;
 			
-			if(direction_l > 0) // 之前轮胎是正转
+			if(direction_r > 0) // 之前轮胎是正转
 			{
-				direction_l = -2;
+				direction_r = -2;
 			}
 			else
 			{
-				direction_l = -1;
+				direction_r = -1;
 			}
 		}
 		else // 现在轮胎是正转
 		{
-			encoder_l++;
+			encoder_r++;
 			
-			if(direction_l < 0) // 之前轮胎是反转，现在轮胎是正转
+			if(direction_r < 0) // 之前轮胎是反转，现在轮胎是正转
 			{
-				direction_l = +2;
+				direction_r = +2;
 			}
 			else
 			{
-				direction_l = 1;
+				direction_r = 1;
 			}
 		}
 	}
 }
+//
+// @简介：T法测速的测试代码
+//        通过串口把T法测速的Omega值发送到Vofa显示
+//
+void Encoder_T_Method_Test(void)
+{
+//	App_USART3_Init();
+//	App_Encoder_Init();
+	float omega_l,omega_r;
+//	while(1)
+//	{
+//		Delay(1);
+//        omega_r=Kalman_GetSpeed_R();
+//        omega_l=Kalman_GetSpeed_L();
+		omega_l = App_Encoder_GetSpeed_L();
+		omega_r = App_Encoder_GetSpeed_R();
+		
+		My_USART_Printf(USART3, "%f,%f\n", omega_l, omega_r);
+//	}
+}
+
+task_register("key", Encoder_T_Method_Test, 10);          /*T法测试任务, 1KHZ*/
 driver_init("Encoder", App_Encoder_Init);                     /*编码器初始化*/

@@ -56,28 +56,3 @@ void Encoder_M_Method_Test(void) // main
 	}
 }
 
-un16_t data;
-
-//
-// @简介：T法测速的测试代码
-//        通过串口把T法测速的Omega值发送到Vofa显示
-//
-void Encoder_T_Method_Test(void)
-{
-//	App_USART3_Init();
-//	App_Encoder_Init();
-	float omega_l,omega_r;
-    data.hword = 0x1234;
-//	while(1)
-//	{
-//		Delay(1);
-//        omega_r=Kalman_GetSpeed_R();
-//        omega_l=Kalman_GetSpeed_L();
-		omega_l = App_Encoder_GetSpeed_L();
-		omega_r = App_Encoder_GetSpeed_R();
-		
-		My_USART_Printf(USART3, "%f,%f\n", omega_l, omega_r);
-//	}
-}
-
-//task_register("key", Encoder_T_Method_Test, 1);          /*T法测试任务, 1KHZ*/

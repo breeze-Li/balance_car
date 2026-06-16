@@ -35,3 +35,5 @@
 .\objects\app_encoder.o: .\std_periph_driver\inc\stm32f10x_wwdg.h
 .\objects\app_encoder.o: .\my_lib\Kalman.h
 .\objects\app_encoder.o: .\my_lib\delay.h
+.\objects\app_encoder.o: user\app_usart2.h
+.\objects\app_encoder.o: .\my_lib\usart.h
