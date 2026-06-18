@@ -9,7 +9,7 @@
 #define filter_kalman   1       //卡尔曼滤波
 #define filter_LowPass  2       //一阶低通滤波
 #define ALPHA 0.1               //一阶低通绿波系数
-#define FILTER_MODE     1       //卡尔曼模式
+#define FILTER_MODE     2       //卡尔曼模式
 
 typedef struct {
     FCT_VOID    hw_init;        // 硬件初始化
@@ -17,6 +17,10 @@ typedef struct {
     UINT8_FCT   hw_ReadB;       // B相硬件读取
     int64_t     encoder;        // 电机编码器的值
     int8_t      direction;      // 电机旋转的方向，1 - 正转，-1 - 反转
+    int8_t      current_dir;    // 当前采样方向
+    int8_t      last_confirm_dir;   // 上次已确认的方向
+    uint8_t     dir_confirm_count;  // 方向确认计数
+    uint8_t     true_change_count;  // 真实跳变次数
     uint64_t    t0, t1;     // 电机编码器发生变化的时间，单位us
     float       speed;          //电机当前速度
 #if (FILTER_MODE == filter_LowPass)

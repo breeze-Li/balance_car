@@ -15,19 +15,4 @@ int main(void)
     while (1) {    
         module_task_process();                   /*ÈÎÎñÂÖÑ¯*/
     }
-    
-//	Encoder_T_Method_Test();
-//	Encoder_M_Method_Test();
-//	Encoder_Test();
-//	Bat_Test();
-//	PWM_Test();
-//	App_Bat_Init();
-//	App_Button_Init();
-//	App_PWM_Init();
-	
-	while(1)
-	{
-//		App_Bat_Proc();
-//		App_Button_Proc();
-	}
 }
