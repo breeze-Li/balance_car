@@ -21,6 +21,8 @@ typedef struct {
     int8_t      last_confirm_dir;   // 上次已确认的方向
     uint8_t     dir_confirm_count;  // 方向确认计数
     uint8_t     true_change_count;  // 真实跳变次数
+    uint64_t    real_time0;        // 实时记录的时间，单位us
+    uint64_t    real_time1;        // 实时记录的时间，单位us
     uint64_t    t0, t1;     // 电机编码器发生变化的时间，单位us
     float       speed;          //电机当前速度
 #if (FILTER_MODE == filter_LowPass)

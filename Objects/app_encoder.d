@@ -1,10 +1,11 @@
 .\objects\app_encoder.o: user\app_encoder.c
+.\objects\app_encoder.o: user\include.h
+.\objects\app_encoder.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\app_encoder.o: .\framework\module.h
 .\objects\app_encoder.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\stdbool.h
-.\objects\app_encoder.o: user\app_encoder.h
+.\objects\app_encoder.o: .\my_lib\delay.h
 .\objects\app_encoder.o: .\std_periph_driver\inc\stm32f10x.h
 .\objects\app_encoder.o: .\std_periph_driver\inc\core_cm3.h
-.\objects\app_encoder.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\stdint.h
 .\objects\app_encoder.o: .\std_periph_driver\inc\cmsis_version.h
 .\objects\app_encoder.o: .\std_periph_driver\inc\cmsis_compiler.h
 .\objects\app_encoder.o: .\std_periph_driver\inc\cmsis_armcc.h
@@ -33,7 +34,7 @@
 .\objects\app_encoder.o: .\std_periph_driver\inc\stm32f10x_tim.h
 .\objects\app_encoder.o: .\std_periph_driver\inc\stm32f10x_usart.h
 .\objects\app_encoder.o: .\std_periph_driver\inc\stm32f10x_wwdg.h
-.\objects\app_encoder.o: .\my_lib\Kalman.h
-.\objects\app_encoder.o: .\my_lib\delay.h
 .\objects\app_encoder.o: user\app_usart2.h
 .\objects\app_encoder.o: .\my_lib\usart.h
+.\objects\app_encoder.o: user\app_encoder.h
+.\objects\app_encoder.o: .\my_lib\Kalman.h

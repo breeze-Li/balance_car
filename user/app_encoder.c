@@ -73,7 +73,7 @@ static float App_Encoder_GetSpeed(volatile encoder_t *this)
 	uint64_t t1_cpy = this->t1;
 	
 	__enable_irq(); // 开启单片机的总中断
-	
+    
 	if(direction_cpy == +2 || direction_cpy == -2)
 	{
 #if (FILTER_MODE == filter_LowPass)
@@ -233,16 +233,17 @@ static uint8_t encoder_R_ReadB(void)
 // 1. 状态转换表 - 定义所有可能的状态转换及有效性
 // 2. 状态转换表的索引对应当前状态，列对应下一个状态
 // 3. 状态转换表的值对应编码器值的增量
-static const int8_t delta_table[4][4] = {
-    { 0, +1, -1, 0 },  // 从状态0(00)出发
-    { -1, 0, 0, +1 },  // 从状态1(01)出发
-    { +1, 0, 0, -1 },  // 从状态2(10)出发
-    { 0, -1, +1, 0 }   // 从状态3(11)出发
-};
+//static const int8_t delta_table[4][4] = {
+//    { 0, +1, -1, 0 },  // 从状态0(00)出发
+//    { -1, 0, 0, +1 },  // 从状态1(01)出发
+//    { +1, 0, 0, -1 },  // 从状态2(10)出发
+//    { 0, -1, +1, 0 }   // 从状态3(11)出发
+//};
 //简介：编码器中断回调函数
 //参数：编码器对象指针
 void Encoder_Irq(volatile encoder_t *this)
 {
+#if 1
     uint64_t now = GetUs();
     // 去抖：如果距离上次中断太近，忽略
     if(now - this->t0 < 300) return;
@@ -294,8 +295,28 @@ void Encoder_Irq(volatile encoder_t *this)
         this->last_confirm_dir = this->current_dir;
     }
 
+#else
 
-/*	if(a ^ b) // 现在轮胎正转
+	this->real_time0 = GetUs();
+	if(this->real_time0 - this->real_time1 < 150){ 
+		this->real_time1 = this->real_time0;
+		return;
+	}
+
+    // uint64_t now = GetUs();
+    // // 去抖：如果距离上次中断太近，忽略
+    // if(now - this->t0 < 300) return;
+    //使用实时时间标记编码器变化的时间,小于100us的忽略
+	//当编码器变化时间大于100us时，记录编码器真实变化时间
+	//计算速度使用编码器真实变化时间间隔,但是该方案测得编码器中断间隔有延迟,在当前中断间隔>100US时才能确定上次中断时间间隔
+    this->t1 = this->t0;
+	this->t0 = this->real_time0;		//记录真实时间
+	this->real_time1 = this->real_time0;// 更新上次中断时间
+    
+    uint8_t a = this->hw_ReadA(); // A相的当前电压
+	uint8_t b = this->hw_ReadB(); // B相的当前电压
+    
+    if(a ^ b) // 现在轮胎正转
 	{
         this->encoder++;
 		
@@ -323,7 +344,7 @@ void Encoder_Irq(volatile encoder_t *this)
 			this->direction = -1;
 		}
 	}
-*/
+#endif
 }
 
 //
