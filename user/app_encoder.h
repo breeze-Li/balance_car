@@ -5,12 +5,12 @@
 #include "Kalman.h"
 #include "include.h"
 
-#define filter_none     0       //无滤波
-#define filter_kalman   1       //卡尔曼滤波
-#define filter_LowPass  2       //一阶低通滤波
-#define ALPHA 0.1               //一阶低通绿波系数
-#define FILTER_MODE     2       //卡尔曼模式
-
+#define filter_none     0       // 无滤波
+#define filter_kalman   1       // 卡尔曼滤波
+#define filter_LowPass  2       // 一阶低通滤波
+#define ALPHA 0.05              // 一阶低通绿波系数
+#define FILTER_MODE     2       // 卡尔曼模式
+#if 0
 typedef struct {
     FCT_VOID    hw_init;        // 硬件初始化
     UINT8_FCT   hw_ReadA;       // A相硬件读取
@@ -30,6 +30,22 @@ typedef struct {
 #elif (FILTER_MODE == filter_kalman)
     KalmanSpeedFilter Kalman;   //kalman滤波矩阵
 #endif
+} encoder_t;
+#endif
+//编码器硬件接口
+typedef struct {
+    FCT_VOID    hw_init;        // 硬件初始化
+    INT16_FCT   hw_ReadCnt;     // 硬件读取计数
+    FCT_VOID    hw_ClearCnt;    // 清除计数
+} encoder_hw_t;
+
+typedef struct {
+    encoder_hw_t hw;
+    int16_t      cnt;            // 硬件编码器计数值
+    float        delat_T;        // 电机计算间隔
+    float        speed;          // 电机当前速度
+    float        speed_Last;     // 电机上次速度，滤波用
+    uint64_t     t0, t1;         // 电机编码器发生变化的时间，单位us
 } encoder_t;
 
 void App_Encoder_Init(void);
