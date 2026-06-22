@@ -8,6 +8,7 @@
 ".\objects\app_pwm.o"
 ".\objects\app_encoder.o"
 ".\objects\led.o"
+".\objects\app_motor.o"
 ".\objects\startup_stm32f10x_md.o"
 ".\objects\misc.o"
 ".\objects\stm32f10x_adc.o"

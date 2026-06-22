@@ -158,4 +158,4 @@ void PWM_Test1(void) // main
 }
 
 driver_init("PWM", App_PWM_Init);           /*电机硬件初始化*/
-task_register("PWM", PWM_Test1, 2000);      /*测试任务, 2s*/
+//task_register("PWM", PWM_Test1, 2000);      /*测试任务, 2s*/

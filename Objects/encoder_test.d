@@ -37,5 +37,6 @@
 .\objects\encoder_test.o: .\my_lib\usart.h
 .\objects\encoder_test.o: .\user\app_encoder.h
 .\objects\encoder_test.o: .\my_lib\Kalman.h
+.\objects\encoder_test.o: .\user\mpu6050\filter.h
 .\objects\encoder_test.o: .\user\include.h
 .\objects\encoder_test.o: .\my_lib\delay.h

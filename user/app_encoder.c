@@ -2,6 +2,8 @@
 #include "app_encoder.h"
 #include "delay.h"
 
+#define DELAT_T 10      //运行时间间隔 单位MS
+
 //  volatile encoder_t encoder_R;    //右轮电机编码器实例
 //  volatile encoder_t encoder_L;    //左轮电机编码器实例
 encoder_t encoder_R;//右轮电机编码器实例
@@ -37,7 +39,9 @@ static void App_EncoderInst_Init(encoder_t *this, FCT_VOID hwInit, INT16_FCT rea
     this->t0         = 0;
     this->t1         = 0;
 	this->speed      = 0;
-	this->speed_Last = 0;
+//	this->speed_Last = 0;
+    //截止频率需要调试，使得滤波效果和响应速度折中 目前相应速度在450MS左右
+    PT1Filter_InitWithFreq(&this->Speed_Filter, 2, 1000 / DELAT_T);
 }
 //
 static int16_t encoder_R_Read(void){
@@ -81,14 +85,15 @@ static float App_Encoder_GetSpeed(encoder_t *this)
     this->hw.hw_ClearCnt();
     //计算时间间隔
     this->delat_T  = (this->t0 - this->t1) * 1.0e-6f;
-    //4倍频，一圈线数为44
-    this->speed = this->cnt / this->delat_T / 44.0f / (30613.0f / 1500.0f) * 360.0f;
+    //4倍频，一圈线数为44  *2pi转为弧度制
+    this->speed = this->cnt / this->delat_T / 44.0f / (30613.0f / 1500.0f) * 6.2831853f;
     //一阶滤波
-    My_USART_Printf(USART3, "%f,", this->speed);
-    this->speed = ALPHA * this->speed + (1.0f - ALPHA) * this->speed_Last;
+//    My_USART_Printf(USART3, "%f,", this->speed);
+//    this->speed = ALPHA * this->speed + (1.0f - ALPHA) * this->speed_Last;
+    this->speed = PT1Filter_Apply(&this->Speed_Filter, this->speed);
     //记录当前速度
-    My_USART_Printf(USART3, "%f\n", this->speed);
-    this->speed_Last = this->speed;
+//    My_USART_Printf(USART3, "%f\n", this->speed);
+//    this->speed_Last = this->speed;
     //记录当次时间，为下次计算做准备
 	this->t1 = this->t0;
     
@@ -201,14 +206,14 @@ void Encoder_R_Init(void)
 // @简介：T法测速的测试代码
 //        通过串口把T法测速的Omega值发送到Vofa显示
 //
-float omega_l,omega_r;
+float omega_encoder_l,omega_encoder_r;
 void Encoder_T_Method_Test(void)
 {
 	
-    omega_l = App_Encoder_GetSpeed_L();
-//    omega_r = App_Encoder_GetSpeed_R();
-//    My_USART_Printf(USART3, "%f,%f\n", omega_l, omega_r);
+    omega_encoder_l = App_Encoder_GetSpeed_L();
+//    omega_encoder_r = App_Encoder_GetSpeed_R();
+//    My_USART_Printf(USART3, "%f,%f\n", omega_encoder_l, omega_encoder_r);
 }
 
-task_register("key", Encoder_T_Method_Test, 10);          /*T法测试任务, 1KHZ*/
+//task_register("key", Encoder_T_Method_Test, DELAT_T);          /*T法测试任务, 1KHZ*/
 driver_init("Encoder", App_Encoder_Init);                     /*编码器初始化*/

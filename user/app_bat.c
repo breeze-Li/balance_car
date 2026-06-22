@@ -168,7 +168,9 @@ static void ADC1_Init(void)
 //
 float App_Bat_Get(void)
 {
-	return vbat;
+    //没有采样电路，固定返回值
+    return 9;
+//	return vbat;
 }
 
 //

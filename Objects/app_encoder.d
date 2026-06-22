@@ -38,3 +38,4 @@
 .\objects\app_encoder.o: .\my_lib\usart.h
 .\objects\app_encoder.o: user\app_encoder.h
 .\objects\app_encoder.o: .\my_lib\Kalman.h
+.\objects\app_encoder.o: .\user\mpu6050\filter.h

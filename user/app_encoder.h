@@ -3,6 +3,7 @@
 
 #include "stm32f10x.h"
 #include "Kalman.h"
+#include "filter.h"
 #include "include.h"
 
 #define filter_none     0       // 无滤波
@@ -44,8 +45,9 @@ typedef struct {
     int16_t      cnt;            // 硬件编码器计数值
     float        delat_T;        // 电机计算间隔
     float        speed;          // 电机当前速度
-    float        speed_Last;     // 电机上次速度，滤波用
+//    float        speed_Last;     // 电机上次速度，滤波用
     uint64_t     t0, t1;         // 电机编码器发生变化的时间，单位us
+    PT1Filter_t  Speed_Filter;   // 一阶低通滤波器
 } encoder_t;
 
 void App_Encoder_Init(void);
