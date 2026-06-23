@@ -96,4 +96,4 @@ void motot_pid_test()
 }
 
 driver_init("Motor", App_Motor_Init);                     /*电机pid初始化*/
-task_register("Motor", motot_pid_test, 5);            /*T法测试任务, 1KHZ*/
+//task_register("Motor", motot_pid_test, 5);            /*T法测试任务, 1KHZ*/

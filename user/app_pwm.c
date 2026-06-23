@@ -1,4 +1,6 @@
+#include "math.h"
 #include "app_pwm.h"
+#include "ai_pwm.h"
 #include "module.h"
 
     /**TIM3 GPIO Configuration    
@@ -8,7 +10,14 @@
 	bin2-> PA4-> B1     ------> TIM3_CH4
     */
 
-#define FULL_DUTY 800
+#define MOTOR_INIT_PERCENT     	30      //起始30%
+#define MOTOR_MAX_VOLTAGE      	90     //按照9V调整,放大10倍
+#define MOTOR_MAX_PERIOD 		800
+
+ai_pwm_t MotorLeftSoftForward;	//左轮前进
+ai_pwm_t MotorLeftSoftBack;		//左轮后退
+ai_pwm_t MotorRightSoftForward;	//右轮前进
+ai_pwm_t MotorRightSoftBack;	//右轮后退
 //
 // @简介：控制TB6612进入休眠状态或者活动状态
 // @参数：on    0 - 休眠状态，向STBY写L
@@ -26,8 +35,6 @@ void App_PWM_Cmd(uint8_t on)
 	}
 }
 
-#include "math.h"
-
 //
 // @简介：设置左电机的占空比
 // @参数：duty - 占空比的具体值，范围-100.0f ~ +100.0f
@@ -40,7 +47,7 @@ void App_PWM_Set_L(float Duty)
 	else sign = -1;
 	
 	Duty = fabsf(Duty);
-	uint16_t ccr = Duty / 100.0f * FULL_DUTY;
+	uint16_t ccr = Duty / 100.0f * MOTOR_MAX_PERIOD;
 	if(sign >= 0) // 前进方向
 	{
         TIM_SetCompare2(TIM3, 0);
@@ -65,7 +72,7 @@ void App_PWM_Set_R(float Duty)
 	else sign = -1;
 	
 	Duty = fabsf(Duty);
-	uint16_t ccr = Duty / 100.0f * FULL_DUTY;
+	uint16_t ccr = Duty / 100.0f * MOTOR_MAX_PERIOD;
 	if(sign >= 0) // 前进方向
 	{
         TIM_SetCompare1(TIM3, 0);
@@ -113,7 +120,7 @@ void App_PWM_Init(void)
 	// 设置时基单元的参数
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct = {0};
 	TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseInitStruct.TIM_Period = FULL_DUTY - 1;
+	TIM_TimeBaseInitStruct.TIM_Period = MOTOR_MAX_PERIOD - 1;
 	TIM_TimeBaseInitStruct.TIM_Prescaler = 9-1;        //10KHZ
 	TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
 	TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct);
@@ -145,17 +152,136 @@ void App_PWM_Init(void)
 	// 闭合定时器的总开关
 	TIM_Cmd(TIM3, ENABLE);
 }
-int pwmR,pwmL = 0;
+
+//左轮硬件设置PWM
+void motorLeftHwSetDuty(uint32_t duty)
+{
+    if(TIM_GetCapture2(TIM3) != duty)
+    {
+        TIM_SetCompare2(TIM3, duty);
+    }
+}
+
+void motorLeftHwSetDuty2(uint32_t duty)
+{
+    if(TIM_GetCapture3(TIM3) != duty)
+    {
+        TIM_SetCompare3(TIM3, duty);
+    }
+}
+
+//右轮硬件设置PWM
+void motorRightHwSetDuty(uint32_t duty)
+{
+    if(TIM_GetCapture1(TIM3) != duty)
+    {
+        TIM_SetCompare1(TIM3, duty);
+    }
+}
+
+void motorRightHwSetDuty2(uint32_t duty)
+{
+    if(TIM_GetCapture4(TIM3) != duty)
+    {
+        TIM_SetCompare4(TIM3, duty);
+    }
+}
+//设置软启目标值
+void motorLeftHwSetPercent(uint32_t percent)
+{
+    aiPwmSetPercent(&MotorLeftSoftForward, percent, motorLeftHwSetDuty);
+}
+
+void motorLeftHwSetPercent2(uint32_t percent)
+{
+    aiPwmSetPercent(&MotorLeftSoftBack, percent, motorLeftHwSetDuty2);
+}
+void motorRightHwSetPercent(uint32_t percent)
+{
+    aiPwmSetPercent(&MotorRightSoftForward, percent, motorRightHwSetDuty);
+}
+
+void motorRightHwSetPercent2(uint32_t percent)
+{
+    aiPwmSetPercent(&MotorRightSoftBack, percent, motorRightHwSetDuty2);
+}
+
+//硬件PWM进程
+void motorHwProcess(void)
+{
+    aiPwmProcess(&MotorLeftSoftForward, 90, motorLeftHwSetDuty);
+    aiPwmProcess(&MotorLeftSoftBack,    90, motorLeftHwSetDuty2);
+    aiPwmProcess(&MotorRightSoftForward,90, motorRightHwSetDuty);
+    aiPwmProcess(&MotorRightSoftBack,   90, motorRightHwSetDuty2);
+}
+//后退
+void motorLeftHwUnclk(uint8_t percent)
+{
+    motorLeftHwSetPercent2(0);
+    motorLeftHwSetPercent(percent);
+    motorHwProcess();
+}
+//前进
+void motorLeftHwClk(uint8_t percent)
+{
+    motorLeftHwSetPercent(0);
+    motorLeftHwSetPercent2(percent);
+    motorHwProcess();
+}
+//停止
+void motorLeftHwBreak(void)
+{
+    motorLeftHwSetPercent(0);
+    motorLeftHwSetPercent2(0);
+    motorHwProcess();
+}
+
+void motorRightHwUnclk(uint8_t percent)
+{
+    motorRightHwSetPercent2(0);
+    motorRightHwSetPercent(percent);
+    motorHwProcess();
+}
+void motorRightHwClk(uint8_t percent)
+{
+    motorRightHwSetPercent(0);
+    motorRightHwSetPercent2(percent);
+    motorHwProcess();
+}
+void motorRightHwBreak(void)
+{
+    motorRightHwSetPercent(0);
+    motorRightHwSetPercent2(0);
+    motorHwProcess();
+}
+
+void motorHwInit(void){
+
+	App_PWM_Init();
+	aiPwmInit(&MotorLeftSoftForward, 	MOTOR_MAX_PERIOD, MOTOR_MAX_VOLTAGE, MOTOR_INIT_PERCENT, MOTOR_INIT_PERCENT);
+	aiPwmInit(&MotorLeftSoftBack, 		MOTOR_MAX_PERIOD, MOTOR_MAX_VOLTAGE, MOTOR_INIT_PERCENT, MOTOR_INIT_PERCENT);
+	aiPwmInit(&MotorRightSoftForward, 	MOTOR_MAX_PERIOD, MOTOR_MAX_VOLTAGE, MOTOR_INIT_PERCENT, MOTOR_INIT_PERCENT);
+	aiPwmInit(&MotorRightSoftBack, 		MOTOR_MAX_PERIOD, MOTOR_MAX_VOLTAGE, MOTOR_INIT_PERCENT, MOTOR_INIT_PERCENT);
+	motorLeftHwBreak();
+	motorRightHwBreak();
+}
+
+float pwmR,pwmL = 0;
 void PWM_Test1(void) // main
 {
     static int state_count = 0;
 	state_count++;
     state_count = state_count % 3;
 	
-    App_PWM_Set_L(pwmL);
-    App_PWM_Set_R(pwmR);
+//    App_PWM_Set_L(pwmL);
+//    App_PWM_Set_R(pwmR);
+    
+    if(pwmL>=0) motorLeftHwClk(pwmL);
+    else        motorLeftHwUnclk(-pwmL);
+    if(pwmR>=0) motorRightHwClk(pwmR);
+    else        motorRightHwUnclk(-pwmR);
     
 }
 
-driver_init("PWM", App_PWM_Init);           /*电机硬件初始化*/
-//task_register("PWM", PWM_Test1, 2000);      /*测试任务, 2s*/
+driver_init("PWM", motorHwInit);           /*电机硬件初始化*/
+task_register("PWM", PWM_Test1, 0);      /*测试任务, 2s*/

@@ -212,8 +212,8 @@ void Encoder_T_Method_Test(void)
 	
     omega_encoder_l = App_Encoder_GetSpeed_L();
 //    omega_encoder_r = App_Encoder_GetSpeed_R();
-//    My_USART_Printf(USART3, "%f,%f\n", omega_encoder_l, omega_encoder_r);
+    My_USART_Printf(USART3, "%f,%f\n", omega_encoder_l, omega_encoder_r);
 }
 
-//task_register("key", Encoder_T_Method_Test, DELAT_T);          /*T法测试任务, 1KHZ*/
+task_register("key", Encoder_T_Method_Test, DELAT_T);          /*T法测试任务, 1KHZ*/
 driver_init("Encoder", App_Encoder_Init);                     /*编码器初始化*/

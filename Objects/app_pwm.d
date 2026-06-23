@@ -1,4 +1,5 @@
 .\objects\app_pwm.o: user\app_pwm.c
+.\objects\app_pwm.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\math.h
 .\objects\app_pwm.o: user\app_pwm.h
 .\objects\app_pwm.o: .\std_periph_driver\inc\stm32f10x.h
 .\objects\app_pwm.o: .\std_periph_driver\inc\core_cm3.h
@@ -31,6 +32,10 @@
 .\objects\app_pwm.o: .\std_periph_driver\inc\stm32f10x_tim.h
 .\objects\app_pwm.o: .\std_periph_driver\inc\stm32f10x_usart.h
 .\objects\app_pwm.o: .\std_periph_driver\inc\stm32f10x_wwdg.h
+.\objects\app_pwm.o: .\my_lib\ai_pwm.h
+.\objects\app_pwm.o: .\user\include.h
 .\objects\app_pwm.o: .\framework\module.h
 .\objects\app_pwm.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\stdbool.h
-.\objects\app_pwm.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\math.h
+.\objects\app_pwm.o: .\my_lib\delay.h
+.\objects\app_pwm.o: .\user\app_usart2.h
+.\objects\app_pwm.o: .\my_lib\usart.h

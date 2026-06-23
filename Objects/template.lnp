@@ -43,6 +43,7 @@
 ".\objects\qmath.o"
 ".\objects\pid.o"
 ".\objects\kalman.o"
+".\objects\ai_pwm.o"
 ".\objects\bat_test.o"
 ".\objects\pwm_test.o"
 ".\objects\encoder_test.o"
