@@ -17,6 +17,8 @@
 #define LINE_SEPERATOR_LF   0x01 // 换行 \n
 #define LINE_SEPERATOR_CRLF 0x02 // 回车+换行 \r\n
 
+#define MY_USART    USART3
+
 void My_USART_SendByte(USART_TypeDef *USARTx, const uint8_t Data);
 void My_USART_SendBytes(USART_TypeDef *USARTx, const uint8_t *pData, uint16_t Size);
 void My_USART_SendChar(USART_TypeDef *USARTx, const char C);

@@ -339,7 +339,7 @@
               <MiscControls>--no-multibyte-chars</MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\std_periph_driver\inc;.\user;.\my_lib;.\my_lib\font;.\my_lib\font\.h;.\test;.\framework;.\user\mpu6050</IncludePath>
+              <IncludePath>.\std_periph_driver\inc;.\user;.\my_lib;.\my_lib\font;.\my_lib\font\.h;.\test;.\framework;.\user\mpu6050;.\user\vofa</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1376,6 +1376,21 @@
               <FileName>MPU6050.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\user\mpu6050\MPU6050.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>vofa</GroupName>
+          <Files>
+            <File>
+              <FileName>vofa_uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\vofa\vofa_uart.c</FilePath>
+            </File>
+            <File>
+              <FileName>vofa_uart.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\user\vofa\vofa_uart.h</FilePath>
             </File>
           </Files>
         </Group>

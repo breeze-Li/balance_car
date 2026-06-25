@@ -222,8 +222,8 @@ void MPU6050_Test(void)
 	pitch = 0.95238 * pitch_g + (1-0.95238) * pitch_a;
 	roll = 0.95238 * roll_g + (1-0.95238) * roll_a;
     
-    My_USART_Printf(USART3, "%f,%f,%f,%f,%f,%f,%f\n",yaw_g, pitch_g, roll_g,temperature , gx, gy, gz);
-//    My_USART_Printf(USART3, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",ax, ay, az, temperature, gx, gy, gz, yaw, pitch, roll);
+    My_USART_Printf(MY_USART, "%f,%f,%f,%f,%f,%f,%f\n",yaw_g, pitch_g, roll_g,temperature , gx, gy, gz);
+//    My_USART_Printf(MY_USART, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",ax, ay, az, temperature, gx, gy, gz, yaw, pitch, roll);
 }
 
 driver_init("MPU6050", App_MPU6050_Init);           /*MPU6050 IIC 初始化*/

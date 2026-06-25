@@ -37,6 +37,17 @@ void App_USART3_Init(void)
 	USART_InitStruct.USART_WordLength = USART_WordLength_8b;
 	
 	USART_Init(USART3, &USART_InitStruct);
+    
+    NVIC_InitTypeDef NVIC_InitStructure;
+
+    /* Enable the USARTz Interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
+    //开启接收中断
+    USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
 	
 	// #4. 闭合USART2的总开关
 	USART_Cmd(USART3, ENABLE);

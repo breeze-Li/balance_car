@@ -250,7 +250,7 @@ static int8_t MPU6050_SoftCalibrate_Z(uint16_t calibration_samples)
         MPU6050_DELAY_MS(mpu6050_dt * 1000); // 要和dt同步
     }
     if (abs(gx_sum / 100) >= 2 && abs(gy_sum / 100) >= 2 && abs(gz_sum / 100) >= 2) {
-        My_USART_Printf(USART3, "%s", "SoftCalibrate error");
+        My_USART_Printf(MY_USART, "%s", "SoftCalibrate error");
         return -1; // 校准失败
     }
     // printf("\n%d,%d,%d\n",gyro_zero_x,gyro_zero_y,gyro_zero_z);// 通过串口打印数据(用于检查驱动是否正常)
@@ -605,8 +605,8 @@ void MPU6050_Test1(void)
 {
     MPU6050_Get_Angle(&MM); // 获取角度（方法2,超低零点漂移,计算量小）
     
-    My_USART_Printf(USART3, "%f,%f,%f,%f,%d,%d,%d,%d,%d,%d\n",MM.yaw, MM.pitch, MM.roll,MM.temp, MM.AccX, MM.AccY, MM.AccZ,MM.GyroX, MM.GyroY, MM.GyroZ);
-//    My_USART_Printf(USART3, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",ax, ay, az, temperature, gx, gy, gz, yaw, pitch, roll);
+    My_USART_Printf(MY_USART, "%f,%f,%f,%f,%d,%d,%d,%d,%d,%d\n",MM.yaw, MM.pitch, MM.roll,MM.temp, MM.AccX, MM.AccY, MM.AccZ,MM.GyroX, MM.GyroY, MM.GyroZ);
+//    My_USART_Printf(MY_USART, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",ax, ay, az, temperature, gx, gy, gz, yaw, pitch, roll);
 }
 
 //driver_init("MPU6050", MPU6050_init);           /*MPU6050 IIC 初始化*/

@@ -88,11 +88,11 @@ static float App_Encoder_GetSpeed(encoder_t *this)
     //4倍频，一圈线数为44  *2pi转为弧度制
     this->speed = this->cnt / this->delat_T / 44.0f / (30613.0f / 1500.0f) * 6.2831853f;
     //一阶滤波
-//    My_USART_Printf(USART3, "%f,", this->speed);
+//    My_USART_Printf(MY_USART, "%f,", this->speed);
 //    this->speed = ALPHA * this->speed + (1.0f - ALPHA) * this->speed_Last;
     this->speed = PT1Filter_Apply(&this->Speed_Filter, this->speed);
     //记录当前速度
-//    My_USART_Printf(USART3, "%f\n", this->speed);
+//    My_USART_Printf(MY_USART, "%f\n", this->speed);
 //    this->speed_Last = this->speed;
     //记录当次时间，为下次计算做准备
 	this->t1 = this->t0;
@@ -212,7 +212,7 @@ void Encoder_T_Method_Test(void)
 	
     omega_encoder_l = App_Encoder_GetSpeed_L();
 //    omega_encoder_r = App_Encoder_GetSpeed_R();
-    My_USART_Printf(USART3, "%f,%f\n", omega_encoder_l, omega_encoder_r);
+//    My_USART_Printf(MY_USART, "%f,%f\n", omega_encoder_l, omega_encoder_r);
 }
 
 task_register("key", Encoder_T_Method_Test, DELAT_T);          /*T法测试任务, 1KHZ*/

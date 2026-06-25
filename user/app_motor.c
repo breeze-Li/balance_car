@@ -92,7 +92,7 @@ void motot_pid_test()
     App_Motor_SetOmega_R(targetOmega);
     
     App_Motor_Proc();
-    My_USART_Printf(USART3, "%.3f,%.3f,%.3f\n", targetOmega, omega_l, omega_r);
+    My_USART_Printf(MY_USART, "%.3f,%.3f,%.3f\n", targetOmega, omega_l, omega_r);
 }
 
 driver_init("Motor", App_Motor_Init);                     /*电机pid初始化*/
