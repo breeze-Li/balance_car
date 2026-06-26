@@ -1392,6 +1392,11 @@
               <FileType>5</FileType>
               <FilePath>.\user\vofa\vofa_uart.h</FilePath>
             </File>
+            <File>
+              <FileName>vofa_com.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\vofa\vofa_com.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

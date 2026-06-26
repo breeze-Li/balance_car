@@ -40,3 +40,5 @@
 .\objects\encoder_test.o: .\user\mpu6050\filter.h
 .\objects\encoder_test.o: .\user\include.h
 .\objects\encoder_test.o: .\my_lib\delay.h
+.\objects\encoder_test.o: .\user\vofa\vofa_uart.h
+.\objects\encoder_test.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\string.h

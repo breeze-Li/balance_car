@@ -35,8 +35,7 @@ void App_PWM_Cmd(uint8_t on)
 	}
 }
 
-//
-// @简介：设置左电机的占空比
+// @简介：设置左电机的占空比,无软启动
 // @参数：duty - 占空比的具体值，范围-100.0f ~ +100.0f
 // @note: duty > 0 左轮胎前进，反之后退
 void App_PWM_Set_L(float Duty)
@@ -60,8 +59,7 @@ void App_PWM_Set_L(float Duty)
 	}
 }
 
-//
-// @简介：设置右电机的占空比
+// @简介：设置右电机的占空比,无软启动
 // @参数：duty - 占空比的具体值，范围-100.0f ~ +100.0f
 // @note: duty > 0 右轮胎前进，反之后退
 void App_PWM_Set_R(float Duty)
@@ -85,6 +83,30 @@ void App_PWM_Set_R(float Duty)
 	}
 }
 
+// @简介：硬件设置左电机的占空比,有软启动
+// @参数：duty - 占空比的具体值，范围-100.0f ~ +100.0f
+// @note: duty > 0 左轮胎前进，反之后退
+void HW_PWM_Set_L(float percent)
+{
+    if(percent >= 0)
+        motorLeftHwClk(percent);
+    else if(percent < 0)
+        motorLeftHwUnclk(-percent);
+//    else
+//        motorLeftHwBreak();
+}
+// @简介：硬件设置右电机的占空比,有软启动
+// @参数：duty - 占空比的具体值，范围-100.0f ~ +100.0f
+// @note: duty > 0 右轮胎前进，反之后退
+void HW_PWM_Set_R(float percent)
+{
+    if(percent >= 0)
+        motorRightHwClk(percent);
+    else if(percent < 0)
+        motorRightHwUnclk(-percent);
+//    else
+//        motorRightHwBreak();
+}
 //
 // @简介：电机硬件初始化
 //        AIN1 - PA7 PB0 - Out_PP
@@ -276,12 +298,15 @@ void PWM_Test1(void) // main
 //    App_PWM_Set_L(pwmL);
 //    App_PWM_Set_R(pwmR);
     
-    if(pwmL>=0) motorLeftHwClk(pwmL);
-    else        motorLeftHwUnclk(-pwmL);
-    if(pwmR>=0) motorRightHwClk(pwmR);
-    else        motorRightHwUnclk(-pwmR);
+//    if(pwmL>=0) motorLeftHwClk(pwmL);
+//    else        motorLeftHwUnclk(-pwmL);
+//    if(pwmR>=0) motorRightHwClk(pwmR);
+//    else        motorRightHwUnclk(-pwmR);
+    motorHwProcess();
     
 }
 
 driver_init("PWM", motorHwInit);           /*电机硬件初始化*/
-task_register("PWM", PWM_Test1, 0);      /*测试任务, 2s*/
+#ifdef USE_FOST_START
+task_register("PWM", motorHwProcess, 0);      /*测试任务, 2s*/
+#endif

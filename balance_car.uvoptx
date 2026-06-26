@@ -240,6 +240,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>JustFloat_Data</ItemText>
         </Ww>
+        <Ww>
+          <count>17</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>pid_motor_l.SP</ItemText>
+        </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
@@ -1675,6 +1680,18 @@
       <bDave2>0</bDave2>
       <PathWithFileName>.\user\vofa\vofa_uart.h</PathWithFileName>
       <FilenameWithoutPath>vofa_uart.h</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>8</GroupNumber>
+      <FileNumber>110</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>.\user\vofa\vofa_com.c</PathWithFileName>
+      <FilenameWithoutPath>vofa_com.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

@@ -5,13 +5,21 @@
 #include "app_pwm.h"
 #include "app_bat.h"
 #include "include.h"
+#include "vofa_uart.h"
 
 PID_TypeDef pid_motor_l; // 左电机调速系统的PID控制器
 PID_TypeDef pid_motor_r; // 右电机调速系统的PID控制器
 
+#ifdef USE_FOST_START
+#define KP 0.8f
+#define KI 1.5f
+#define KD 0.01 //0.01
+#else
 #define KP 0.4f
-#define KI 7.0f
+#define KI 2.0f
 #define KD 0 //0.01
+#endif
+
 
 //
 // @简介：初始化左右电机调速系统
@@ -48,8 +56,13 @@ void App_Motor_Proc(void)
 	float duty_l = ua_l / vbat * 100.0f;
 	float duty_r = ua_r / vbat * 100.0f;
 	
+#ifdef USE_FOST_START
+    HW_PWM_Set_L(duty_l);
+    HW_PWM_Set_R(duty_r);
+#else
 	App_PWM_Set_L(duty_l);
 	App_PWM_Set_R(duty_r);
+#endif
 }
 
 //
@@ -87,13 +100,16 @@ float targetOmega = 0.0f;
 void motot_pid_test()
 {
 //    targetOmega = (GetTick() / 1000) % 6 * 3.0f;
-    
-    App_Motor_SetOmega_L(targetOmega);
-    App_Motor_SetOmega_R(targetOmega);
-    
+    un_floate fdata[2];
+//    App_Motor_SetOmega_L(targetOmega);
+//    App_Motor_SetOmega_R(targetOmega);
+    fdata[0] = (un_floate)omega_l;
+    fdata[1] = (un_floate)pid_motor_l.SP;
     App_Motor_Proc();
-    My_USART_Printf(MY_USART, "%.3f,%.3f,%.3f\n", targetOmega, omega_l, omega_r);
+    vofaSetJustFloat(fdata[0].hvalve , TxChannel_1, 2);
+    vofaSendJustFloat();
+//    My_USART_Printf(MY_USART, "%.3f,%.3f,%.3f\n", targetOmega, omega_l, omega_r);
 }
 
 driver_init("Motor", App_Motor_Init);                     /*电机pid初始化*/
-//task_register("Motor", motot_pid_test, 5);            /*T法测试任务, 1KHZ*/
+task_register("Motor", motot_pid_test, 5);            /*T法测试任务, 1KHZ*/

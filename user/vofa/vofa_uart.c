@@ -28,12 +28,25 @@ void uartSendData(uint8_t* Array, uint8_t SIZE)
 }
 
 /**
+* @param fdata	：	指向要设置的浮点数据的指针
+* @param Channel：	要设置的JustFloat通道号
+* @param len	：	要设置的JustFloat数据长度
+* @return void
+*/
+void vofaSetJustFloat(const uint8_t* Puint8data, const TxChannel Channel, const uint32_t len)
+{
+	//使用16进制拷贝数据
+    memcpy(JustFloat_Data.txdata[Channel].hvalve, Puint8data, len * sizeof(float));
+}
+
+/**
 * @param vofaJFFframe: 包含数据帧的结构体
 * @return void
 */
-void vofaSendJustFloat(vofaJustFloatFrame* vofaJFFrame)
+void vofaSendJustFloat(void)
 {
-	uartSendData(vofaJFFrame->data, dim(vofaJFFrame->data));
+//	uartSendData(vofaJFFrame->data, dim(vofaJFFrame->data));
+    uartSendData(JustFloat_Data.data, dim(JustFloat_Data.data));
 }
 
 /**
@@ -96,14 +109,12 @@ void uartCMDRecv(uint8_t byte_data) //此函数放在串口中断中
 		vofaCommandData.completionFlag = 1;
 		vofaCommandData.vofaRxBufferIndex              = 0;
 	}
-
 	else if (vofaCommandData.vofaRxBufferIndex > (dim(vofaCommandData.uartRxPacket.data) - 1))
 	{
 		vofaCommandData.completionFlag      = 0;
 		vofaCommandData.vofaRxBufferIndex   = 0;
 		memset(vofaCommandData.uartRxPacket.data, 0, dim(vofaCommandData.uartRxPacket.data));
 	}
-
 	else
 	{
 		vofaCommandData.vofaRxBufferIndex++;
@@ -124,50 +135,49 @@ void USART3_IRQHandler(void)
 /**
 * @brief vofa命令帧解析
 */
-void vofaCommandParse(void)
+vofaCommand* vofaCommandParse(void)
 {
     if (vofaCommandData.completionFlag == 1)		//收到命令帧
-	{vofaCommandData.completionFlag = 0; 			//清楚标志位
-	RecFrame* pRxPacket;
-	pRxPacket = &vofaCommandData.uartRxPacket;
-
-    //判断帧头帧尾
-	if (vofaCommandData.uartRxPacket.framehead[0] != '@' 
-        || vofaCommandData.uartRxPacket.framehead[3] != '=' 
-            || vofaCommandData.uartRxPacket.frametail[RFRAME_TAIL_SIZE - 2] != '!' 
-                || vofaCommandData.uartRxPacket.frametail[RFRAME_TAIL_SIZE - 1] != '#')
 	{
+		vofaCommandData.completionFlag = 0; 			//清楚标志位
+		RecFrame* pRxPacket;
+		pRxPacket = &vofaCommandData.uartRxPacket;
+
+		//判断帧头帧尾
+		if (vofaCommandData.uartRxPacket.framehead[0] != '@' 
+			|| vofaCommandData.uartRxPacket.framehead[3] != '=' 
+				|| vofaCommandData.uartRxPacket.frametail[RFRAME_TAIL_SIZE - 2] != '!' 
+					|| vofaCommandData.uartRxPacket.frametail[RFRAME_TAIL_SIZE - 1] != '#')
+		{
+			memset(vofaCommandData.uartRxPacket.data, 0, dim(vofaCommandData.uartRxPacket.data));
+			return NULL;
+		}
+
+		switch (vofaCommandData.uartRxPacket.framehead[1])
+		{
+			//命令类型,单字节支持A-Z
+			case 'A'...'Z': vofaCommandData.cmdType = vofaCommandData.uartRxPacket.framehead[1];
+				break;
+			default: vofaCommandData.cmdType = INVALID;
+				break;
+		}
+
+		switch (vofaCommandData.uartRxPacket.framehead[2])
+		{
+			//命令ID,单字节支持1-9
+			case '1'...'9': vofaCommandData.cmdID = vofaCommandData.uartRxPacket.framehead[2];
+				break;
+			default: vofaCommandData.cmdID = INVALID;
+				break;
+		}
+		vofaCommandData.floatData = pRxPacket->fdata.fvalve;
+		//测试JustFloat发送
+	    // JustFloat_Data.txdata[0].fvalve  = pRxPacket->fdata.fvalve;
+	    // vofaSendJustFloat(&JustFloat_Data);
+		pRxPacket = NULL;
 		memset(vofaCommandData.uartRxPacket.data, 0, dim(vofaCommandData.uartRxPacket.data));
-		return;
+		return &vofaCommandData;
 	}
-
-	switch (vofaCommandData.uartRxPacket.framehead[1])
-	{
-		case 'S': vofaCommandData.cmdType = Speed;
-			break;
-		case 'P': vofaCommandData.cmdType = Position;
-			break;
-		default: vofaCommandData.cmdType = INVALID;
-			break;
-	}
-
-	switch (vofaCommandData.uartRxPacket.framehead[2])
-	{
-		case '1': vofaCommandData.cmdID = Direct_Assignment;
-			break;
-		case '2': vofaCommandData.cmdID = Increase;
-			break;
-		case '3': vofaCommandData.cmdID = Decrease;
-			break;
-		default: vofaCommandData.cmdID = INVALID;
-			break;
-	}
-	vofaCommandData.floatData = pRxPacket->fdata.fvalve;
-    //测试JustFloat发送
-//    JustFloat_Data.txdata[0].fvalve  = pRxPacket->fdata.fvalve;
-//    vofaSendJustFloat(&JustFloat_Data);
-	pRxPacket = NULL;
-	memset(vofaCommandData.uartRxPacket.data, 0, dim(vofaCommandData.uartRxPacket.data));
-}}
+	return NULL;
+}
 module_init("vofaJustFloatInit", vofaJustFloatInit);
-task_register("vofaCommandParse", vofaCommandParse, 10);      /*测试任务, 2s*/

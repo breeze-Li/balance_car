@@ -36,6 +36,8 @@
 .\objects\app_encoder.o: .\std_periph_driver\inc\stm32f10x_wwdg.h
 .\objects\app_encoder.o: user\app_usart2.h
 .\objects\app_encoder.o: .\my_lib\usart.h
+.\objects\app_encoder.o: .\user\vofa\vofa_uart.h
+.\objects\app_encoder.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\string.h
 .\objects\app_encoder.o: user\app_encoder.h
 .\objects\app_encoder.o: .\my_lib\Kalman.h
 .\objects\app_encoder.o: .\user\mpu6050\filter.h

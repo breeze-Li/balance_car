@@ -1,6 +1,7 @@
 #include "include.h"
 #include "app_encoder.h"
 #include "delay.h"
+#include "vofa_uart.h"
 
 #define DELAT_T 10      //运行时间间隔 单位MS
 
@@ -206,14 +207,16 @@ void Encoder_R_Init(void)
 // @简介：T法测速的测试代码
 //        通过串口把T法测速的Omega值发送到Vofa显示
 //
-float omega_encoder_l,omega_encoder_r;
+un_floate omega_encoder_l,omega_encoder_r;
 void Encoder_T_Method_Test(void)
 {
 	
-    omega_encoder_l = App_Encoder_GetSpeed_L();
+    omega_encoder_l = (un_floate)App_Encoder_GetSpeed_L();
+    vofaSetJustFloat(omega_encoder_l.hvalve, TxChannel_1, 1);
+    vofaSendJustFloat();
 //    omega_encoder_r = App_Encoder_GetSpeed_R();
 //    My_USART_Printf(MY_USART, "%f,%f\n", omega_encoder_l, omega_encoder_r);
 }
 
-task_register("key", Encoder_T_Method_Test, DELAT_T);          /*T法测试任务, 1KHZ*/
+//task_register("key", Encoder_T_Method_Test, DELAT_T);          /*T法测试任务, 1KHZ*/
 driver_init("Encoder", App_Encoder_Init);                     /*编码器初始化*/

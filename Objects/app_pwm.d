@@ -39,3 +39,5 @@
 .\objects\app_pwm.o: .\my_lib\delay.h
 .\objects\app_pwm.o: .\user\app_usart2.h
 .\objects\app_pwm.o: .\my_lib\usart.h
+.\objects\app_pwm.o: .\user\vofa\vofa_uart.h
+.\objects\app_pwm.o: H:\Program Files\keil\ARM\ARMCC\Bin\..\include\string.h

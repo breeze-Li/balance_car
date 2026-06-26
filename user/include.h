@@ -5,6 +5,7 @@
 #include "module.h"
 #include "delay.h"
 #include "app_usart2.h"
+#include "vofa_uart.h"
 
 typedef uint32_t    timer_t;
 typedef union
