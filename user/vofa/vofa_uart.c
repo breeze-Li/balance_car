@@ -33,20 +33,21 @@ void uartSendData(uint8_t* Array, uint8_t SIZE)
 * @param len	：	要设置的JustFloat数据长度
 * @return void
 */
-void vofaSetJustFloat(const uint8_t* Puint8data, const TxChannel Channel, const uint32_t len)
+void vofaSetJustFloat(vofaJustFloatFrame* vofaJFFrame, const uint8_t* Puint8data, const TxChannel Channel, const uint32_t len)
 {
 	//使用16进制拷贝数据
-    memcpy(JustFloat_Data.txdata[Channel].hvalve, Puint8data, len * sizeof(float));
+    memcpy(vofaJFFrame->txdata[Channel].hvalve, Puint8data, len * sizeof(float));
+//    memcpy(JustFloat_Data.txdata[Channel].hvalve, Puint8data, len * sizeof(float));
 }
 
 /**
 * @param vofaJFFframe: 包含数据帧的结构体
 * @return void
 */
-void vofaSendJustFloat(void)
+void vofaSendJustFloat(vofaJustFloatFrame* vofaJFFrame)
 {
-//	uartSendData(vofaJFFrame->data, dim(vofaJFFrame->data));
-    uartSendData(JustFloat_Data.data, dim(JustFloat_Data.data));
+	uartSendData(vofaJFFrame->data, dim(vofaJFFrame->data));
+//    uartSendData(JustFloat_Data.data, dim(JustFloat_Data.data));
 }
 
 /**
@@ -130,6 +131,10 @@ void USART3_IRQHandler(void)
     {
         uint8_t byte_data = USART_ReceiveData(USART3);
         uartCMDRecv(byte_data);
+    }
+    if(USART_GetITStatus(USART3, USART_IT_IDLE) != RESET)
+    {
+        uint8_t byte_data = USART_ReceiveData(USART3); //读DR清除中断标志
     }
 }
 /**

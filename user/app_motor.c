@@ -10,6 +10,12 @@
 PID_TypeDef pid_motor_l; // 左电机调速系统的PID控制器
 PID_TypeDef pid_motor_r; // 右电机调速系统的PID控制器
 
+#if MOTOR_VOFA_SEND_EN
+
+vofaJustFloatFrame JustFloat_Motor;
+
+#endif
+
 #ifdef USE_FOST_START
 #define KP 0.8f
 #define KI 1.5f
@@ -106,8 +112,13 @@ void motot_pid_test()
     fdata[0] = (un_floate)omega_l;
     fdata[1] = (un_floate)pid_motor_l.SP;
     App_Motor_Proc();
-    vofaSetJustFloat(fdata[0].hvalve , TxChannel_1, 2);
-    vofaSendJustFloat();
+#if MOTOR_VOFA_SEND_EN
+
+    vofaSetJustFloat(&JustFloat_Motor, fdata[0].hvalve , TxChannel_1, 2);
+    vofaSendJustFloat(&JustFloat_Motor);
+
+#endif
+
 //    My_USART_Printf(MY_USART, "%.3f,%.3f,%.3f\n", targetOmega, omega_l, omega_r);
 }
 

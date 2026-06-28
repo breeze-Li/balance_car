@@ -10,6 +10,12 @@
 encoder_t encoder_R;//右轮电机编码器实例
 encoder_t encoder_L;//左轮电机编码器实例
 
+#if ENCODER_VOFA_SEND_EN
+
+vofaJustFloatFrame JustFloat_Encoder;
+
+#endif
+
 static void Encoder_L_Init(void); // 左编码器硬件初始化
 static void Encoder_R_Init(void); // 右编码器硬件初始化
 static void App_EncoderInst_Init(encoder_t *this, FCT_VOID hwInit, INT16_FCT read, FCT_VOID clr);
@@ -212,10 +218,16 @@ void Encoder_T_Method_Test(void)
 {
 	
     omega_encoder_l = (un_floate)App_Encoder_GetSpeed_L();
-    vofaSetJustFloat(omega_encoder_l.hvalve, TxChannel_1, 1);
-    vofaSendJustFloat();
+    
+#if ENCODER_VOFA_SEND_EN
+    
+    vofaSetJustFloat(&JustFloat_Encoder, omega_encoder_l.hvalve, TxChannel_1, 1);
+    vofaSendJustFloat(&JustFloat_Encoder);
+    
+#endif
+
 //    omega_encoder_r = App_Encoder_GetSpeed_R();
-//    My_USART_Printf(MY_USART, "%f,%f\n", omega_encoder_l, omega_encoder_r);
+//    My_USART_Printf(MY_USART, "%f,%f\n", omega_encoder_l, omega_encoder_r);//firewater格式
 }
 
 //task_register("key", Encoder_T_Method_Test, DELAT_T);          /*T法测试任务, 1KHZ*/

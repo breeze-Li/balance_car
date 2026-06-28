@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include <string.h>
 
+//配置vofa 发送
+#define ENCODER_VOFA_SEND_EN    0
+#define MOTOR_VOFA_SEND_EN      1
+
+
 #define INVALID 0xFF
 #define RFRAME_HEAD_SIZE (4U)
 #define RFRAME_TAIL_SIZE (2U)
@@ -80,11 +85,11 @@ typedef struct vofaCommand
 extern "C" {
 #endif
 
-void vofaSendJustFloat(void);     //以JustFloat协议发送数据
+void vofaSendJustFloat(vofaJustFloatFrame* vofaJFFrame);     //以JustFloat协议发送数据
 void vofaSendFirewater(const float* fdata, uint32_t ulSize); //以Firewater协议发送数据
 void vofaSendRawdata(uint8_t* pData, uint32_t ulSize);       //以rawdata协议发送数据
 
-void vofaSetJustFloat(const uint8_t* fdata, const TxChannel Channel, const uint32_t len); //设置指定通道的JustFloat数据
+void vofaSetJustFloat(vofaJustFloatFrame*, const uint8_t* , const TxChannel , const uint32_t ); //设置指定通道的JustFloat数据
 void vofaJustFloatInit(void);        //Justfloat协议初始化
 void uartCMDRecv(uint8_t byte_data); //uart串口接收单字节并存入vofaCommandData数据包
 vofaCommand* vofaCommandParse(void);         //解析命令

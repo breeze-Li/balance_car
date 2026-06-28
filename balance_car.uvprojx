@@ -1171,6 +1171,16 @@
               <FileType>5</FileType>
               <FilePath>.\framework\module.h</FilePath>
             </File>
+            <File>
+              <FileName>fifo.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\framework\fifo.h</FilePath>
+            </File>
+            <File>
+              <FileName>fifo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\framework\fifo.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

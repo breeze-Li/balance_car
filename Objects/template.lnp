@@ -49,6 +49,7 @@
 ".\objects\encoder_test.o"
 ".\objects\blink.o"
 ".\objects\module.o"
+".\objects\fifo.o"
 ".\objects\filter.o"
 ".\objects\mpu6050.o"
 ".\objects\vofa_uart.o"

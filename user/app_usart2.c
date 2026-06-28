@@ -46,8 +46,9 @@ void App_USART3_Init(void)
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
-    //开启接收中断
+    //开启接收中断，空闲中断
     USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+    USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);
 	
 	// #4. 闭合USART2的总开关
 	USART_Cmd(USART3, ENABLE);
