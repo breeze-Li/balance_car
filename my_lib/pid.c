@@ -84,7 +84,35 @@ float PID_Compute(PID_TypeDef *PID, float FB)
 	
 	return CO;
 }
+//
+// @简介：调节PID的参数（Kp, Ki和Kd）
+// @参数：PID - PID算法句柄
+// @参数：NewKp  - 新的比例系数Kp
+// @参数：NewKi  - 新的积分系数Ki
+// @参数：NewKd  - 新的微分系数Kd
+// @返回：空
+//
+void PID_ChangeTunings(PID_TypeDef *PID, float NewKp, float NewKi, float NewKd)
+{
+	PID->Kp = NewKp;
+	PID->Ki = NewKi;
+	PID->Kd = NewKd;
+}
 
+//
+// @简介：获取当前的PID参数
+// @参数：PID - PID算法句柄
+// @参数：pKpOut - 输出参数，用于输出Kp的值
+// @参数：pKiOut - 输出参数，用于输出Ki的值
+// @参数：pKdOut - 输出参数，用于输出Kd的值
+// @返回：空
+//
+void PID_GetTunings(PID_TypeDef *PID, float *pKpOut, float *pKiOut, float *pKdOut)
+{
+	*pKpOut = PID->Kp;
+	*pKiOut = PID->Ki;
+	*pKdOut = PID->Kd;
+}
 //
 // @简介：对PID控制器进行复位
 //

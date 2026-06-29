@@ -7,7 +7,7 @@
 /*VOFA type structure*/
 vofaJustFloatFrame JustFloat_Data;
 vofaCommand        vofaCommandData;
-
+uint8_t redaHwData[20];
 /**
 * @param c: 发送的数据
 * @return void
@@ -24,7 +24,8 @@ void uartSendByte(const uint8_t c)
 */
 void uartSendData(uint8_t* Array, uint8_t SIZE)
 {
-    My_USART_SendBytes(MY_USART, Array, SIZE);
+    //My_USART_SendBytes(MY_USART, Array, SIZE);
+    comHwSend(Array, SIZE);
 }
 
 /**
@@ -98,9 +99,9 @@ void vofaJustFloatInit(void)
 
 /**
 * @brief 将串口收到的数据判断并存入数据包中，并比对帧控制接收完成标志位置位
-* @param byte_data： 串口接收到的字节数据 
+* @param byte_data： 串口接收到的字节数据 单字节中断使用
 */
-void uartCMDRecv(uint8_t byte_data) //此函数放在串口中断中
+void uartCMDRecv(uint8_t byte_data) //此函数放在串口中断中,方式不适用
 {
 	vofaCommandData.uartRxPacket.data[vofaCommandData.vofaRxBufferIndex] = byte_data;
 
@@ -127,35 +128,36 @@ void uartCMDRecv(uint8_t byte_data) //此函数放在串口中断中
 */
 vofaCommand* vofaCommandParse(void)
 {
-    if (vofaCommandData.completionFlag == 1)		//收到命令帧
+    if (comHwGetRxLen())		//收到命令帧
 	{
-		vofaCommandData.completionFlag = 0; 			//清楚标志位
-		RecFrame* pRxPacket;
-		pRxPacket = &vofaCommandData.uartRxPacket;
+		//将一帧数据全部读取
+		comHwRead(redaHwData, comHwGetRxLen());
+		RecFrame* pRxPacket;					//指向接收数据包的指针
+		pRxPacket = (RecFrame*)redaHwData;		//将接收数据指针转换为RecFrame结构体指针
 
 		//判断帧头帧尾
-		if (vofaCommandData.uartRxPacket.framehead[0] != '@' 
-			|| vofaCommandData.uartRxPacket.framehead[3] != '=' 
-				|| vofaCommandData.uartRxPacket.frametail[RFRAME_TAIL_SIZE - 2] != '!' 
-					|| vofaCommandData.uartRxPacket.frametail[RFRAME_TAIL_SIZE - 1] != '#')
+		if (pRxPacket->framehead[0] != '@' 
+			|| pRxPacket->framehead[3] != '=' 
+				|| pRxPacket->frametail[RFRAME_TAIL_SIZE - 2] != '!' 
+					|| pRxPacket->frametail[RFRAME_TAIL_SIZE - 1] != '#')
 		{
-			memset(vofaCommandData.uartRxPacket.data, 0, dim(vofaCommandData.uartRxPacket.data));
-			return NULL;
+//			memset(vofaCommandData.uartRxPacket.data, 0, dim(vofaCommandData.uartRxPacket.data));
+			return NULL;	//帧头帧尾错误，返回空指针
 		}
 
-		switch (vofaCommandData.uartRxPacket.framehead[1])
+		switch (pRxPacket->framehead[1])
 		{
 			//命令类型,单字节支持A-Z
-			case 'A'...'Z': vofaCommandData.cmdType = vofaCommandData.uartRxPacket.framehead[1];
+			case 'A'...'Z': vofaCommandData.cmdType = pRxPacket->framehead[1];
 				break;
 			default: vofaCommandData.cmdType = INVALID;
 				break;
 		}
 
-		switch (vofaCommandData.uartRxPacket.framehead[2])
+		switch (pRxPacket->framehead[2])
 		{
 			//命令ID,单字节支持1-9
-			case '1'...'9': vofaCommandData.cmdID = vofaCommandData.uartRxPacket.framehead[2];
+			case '1'...'9': vofaCommandData.cmdID = pRxPacket->framehead[2];
 				break;
 			default: vofaCommandData.cmdID = INVALID;
 				break;
@@ -165,7 +167,7 @@ vofaCommand* vofaCommandParse(void)
 	    // JustFloat_Data.txdata[0].fvalve  = pRxPacket->fdata.fvalve;
 	    // vofaSendJustFloat(&JustFloat_Data);
 		pRxPacket = NULL;
-		memset(vofaCommandData.uartRxPacket.data, 0, dim(vofaCommandData.uartRxPacket.data));
+		// memset(vofaCommandData.uartRxPacket.data, 0, dim(vofaCommandData.uartRxPacket.data));
 		return &vofaCommandData;
 	}
 	return NULL;

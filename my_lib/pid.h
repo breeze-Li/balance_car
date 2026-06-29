@@ -23,5 +23,7 @@ void PID_ChangeSP(PID_TypeDef *PID, float SP);
 float PID_Compute(PID_TypeDef *PID, float FB);
 void PID_LimitConfig(PID_TypeDef *PID, float Upper, float Lower);
 void PID_Reset(PID_TypeDef *PID);
+void PID_ChangeTunings(PID_TypeDef *PID, float NewKp, float NewKi, float NewKd);
+void PID_GetTunings(PID_TypeDef *PID, float *pKpOut, float *pKiOut, float *pKdOut);
 
 #endif

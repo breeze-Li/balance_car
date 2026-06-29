@@ -6,8 +6,7 @@
 
 //配置vofa 发送
 #define ENCODER_VOFA_SEND_EN    0
-#define MOTOR_VOFA_SEND_EN      0
-
+#define MOTOR_VOFA_SEND_EN      1
 
 #define INVALID 0xFF
 #define RFRAME_HEAD_SIZE (4U)

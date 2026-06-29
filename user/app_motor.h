@@ -7,6 +7,9 @@ void App_Motor_Init(void);
 void App_Motor_Proc(void);
 void App_Motor_SetOmega_L(float Omega);
 void App_Motor_SetOmega_R(float Omega);
-void App_Motor_Cmd(uint8_t On);
+void App_Motor_Cmd(uint8_t On);	
+void App_Motor_Set_PIDPara(uint8_t motor, uint8_t para_index, float para_value);
+
+
 
 #endif

@@ -12,7 +12,9 @@ encoder_t encoder_L;//左轮电机编码器实例
 
 #if ENCODER_VOFA_SEND_EN
 
-vofaJustFloatFrame JustFloat_Encoder;
+vofaJustFloatFrame JustFloat_Encoder = {
+    .frametail = {0x00, 0x00, 0x80, 0x7F}
+};
 
 #endif
 
@@ -213,12 +215,13 @@ void Encoder_R_Init(void)
 // @简介：T法测速的测试代码
 //        通过串口把T法测速的Omega值发送到Vofa显示
 //
+extern float omega_l,omega_r;
 un_floate omega_encoder_l,omega_encoder_r;
 void Encoder_T_Method_Test(void)
 {
 	
-    omega_encoder_l = (un_floate)App_Encoder_GetSpeed_L();
-    
+//    omega_encoder_l = (un_floate)App_Encoder_GetSpeed_L();
+    omega_encoder_l = (un_floate)omega_l;
 #if ENCODER_VOFA_SEND_EN
     
     vofaSetJustFloat(&JustFloat_Encoder, omega_encoder_l.hvalve, TxChannel_1, 1);

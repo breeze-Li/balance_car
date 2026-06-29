@@ -6,6 +6,7 @@
 
 void App_USART3_Init(void);
 uint16_t comHwSend(uint8_t *buffer, uint16_t size);
+uint16_t comHwGetRxLen(void);
 uint16_t comHwRead(uint8_t *buffer, uint16_t size);
 
 #endif

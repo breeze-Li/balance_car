@@ -36,11 +36,33 @@ void vofaSetRightSpeed(vofaCommand *cmd)
 {
     App_Motor_SetOmega_R(cmd->floatData);
 }
+
+//P1 - 设置电机PID参数
+void vofaSetMotorSpeedPIDPara(vofaCommand *cmd)
+{
+    uint8_t index = 0;
+    uint8_t motor = 0xff;
+    if(cmd->cmdID == '1') motor = 1;
+    else if(cmd->cmdID == '2') motor = 2;
+    else return;
+    if(cmd->cmdType == 'P') index = 0;
+    else if(cmd->cmdType == 'I') index = 1;
+    else if(cmd->cmdType == 'D') index = 2;
+    else return;
+    App_Motor_Set_PIDPara(motor, index, cmd->floatData);
+}
+
 paracmd paracmdList[]={
     {'W', '1', vofaSetLeftDuty},  //硬件设置左电机占空比 PWM1
     {'W', '2', vofaSetRightDuty}, //硬件设置右电机占空比 PWM2
     {'M', '1', vofaSetLeftSpeed}, //左电机速度,使用PID,单位是rad/s MOTOR1
     {'M', '2', vofaSetRightSpeed}, //右电机速度,使用PID,单位是rad/s MOTOR2
+    {'P', '1', vofaSetMotorSpeedPIDPara}, //设置左电机PID参数 Kp
+    {'P', '2', vofaSetMotorSpeedPIDPara}, //设置右电机PID参数 Kp
+    {'I', '1', vofaSetMotorSpeedPIDPara}, //设置左电机PID参数 Ki
+    {'I', '2', vofaSetMotorSpeedPIDPara}, //设置右电机PID参数 Ki
+    {'D', '1', vofaSetMotorSpeedPIDPara}, //设置左电机PID参数 Kd
+    {'D', '2', vofaSetMotorSpeedPIDPara}, //设置右电机PID参数 Kd
 }; //命令列表
 
 //串口命令解析函数

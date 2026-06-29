@@ -12,7 +12,9 @@ PID_TypeDef pid_motor_r; // 右电机调速系统的PID控制器
 
 #if MOTOR_VOFA_SEND_EN
 
-vofaJustFloatFrame JustFloat_Motor;
+vofaJustFloatFrame JustFloat_Motor = {
+    .frametail = {0x00, 0x00, 0x80, 0x7F}
+};
 
 #endif
 
@@ -21,9 +23,9 @@ vofaJustFloatFrame JustFloat_Motor;
 #define KI 1.5f
 #define KD 0.01 //0.01
 #else
-#define KP 0.4f
-#define KI 2.0f
-#define KD 0 //0.01
+#define KP 0.8f //1.0
+#define KI 4.5f //4.1
+#define KD 0.01 //0.03
 #endif
 
 
@@ -46,7 +48,7 @@ void App_Motor_Proc(void)
 {
 //	PERIODIC(1) // 每间隔1ms执行一次
 	
-	// #1. 通过编码器获取左右电机旋转的角速度
+	// #1. 通过编码器获取左右电机旋转的角速度 只允许在此周期性调用一次，因为每次调用都会计算一次
 	omega_l = App_Encoder_GetSpeed_L();
 	omega_r = App_Encoder_GetSpeed_R();
 	
@@ -87,6 +89,28 @@ void App_Motor_SetOmega_L(float Omega)
 void App_Motor_SetOmega_R(float Omega)
 {
 	PID_ChangeSP(&pid_motor_r, Omega);
+}
+
+//
+// @简介：用来设置电机的PID参数
+// @参数：motor - 表示电机，1表示左电机，2表示右电机
+// @参数：para_index - 表示参数索引，Kp是0 Ki是1，Kd是2
+//
+void App_Motor_Set_PIDPara(uint8_t motor, uint8_t para_index, float para_value)
+{
+    float para[3];
+    PID_TypeDef *pid;
+	if(motor == 1){
+		pid = &pid_motor_l;
+	}
+	else if(motor == 2){
+		pid = &pid_motor_r;
+	}else{
+		return;
+	}
+    PID_GetTunings(pid, &para[0], &para[1], &para[2]);
+	para[para_index] = para_value;
+	PID_ChangeTunings(pid, para[0], para[1], para[2]);
 }
 
 //

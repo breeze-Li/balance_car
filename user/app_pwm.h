@@ -3,7 +3,7 @@
 
 #include "stm32f10x.h"
 
-#define USE_FOST_START
+//#define USE_FOST_START
 
 void App_PWM_Init(void);
 void App_PWM_Cmd(uint8_t on);

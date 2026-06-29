@@ -13,10 +13,10 @@
 #define USARTy_Rx_DMA_FLAG       DMA1_IT_TC3
 #define USARTy_DR_Base           (uint32_t)&USART3->DR
 
-#define BUFF_SIZE_TX                200
-#define BUFF_SIZE_RX                200
-#define FIFO_SIZE_TX                200
-#define FIFO_SIZE_RX                200
+#define BUFF_SIZE_TX                50
+#define BUFF_SIZE_RX                50
+#define FIFO_SIZE_TX                50
+#define FIFO_SIZE_RX                50
 
 struct
 {
@@ -238,15 +238,26 @@ uint16_t comHwSend(uint8_t *buffer, uint16_t size)
     return 1;
 }
 
+uint16_t comHwGetRxLen(void)
+{
+    return fifoPeak(&comHw.fifoRx);
+}
+
 //
 // @简介：接收缓从区数据， 要接收的数据地址，要接收的数据长度
 //
-uint16_t comHwRead(uint8_t *buffer, uint16_t size)
+uint16_t comHwRead(uint8_t *data, uint16_t size)
 {
-    NVIC_DisableIRQ(USART3_IRQn);
-    fifoDequeue(&comHw.fifoRx, buffer, size);
-    NVIC_EnableIRQ(USART3_IRQn);
-    return 1;
+    uint16_t w_Out = 0;
+    
+    if(fifoPeak(&comHw.fifoRx) > 0)
+    {
+        NVIC_DisableIRQ(USART3_IRQn);
+        w_Out = fifoDequeue(&comHw.fifoRx, data, size);
+        NVIC_EnableIRQ(USART3_IRQn);
+    }
+    
+    return w_Out;
 }
 
 void DMA_Tx_Test(void)
@@ -256,5 +267,5 @@ void DMA_Tx_Test(void)
 }
 driver_init("USART3_Init", App_USART3_Init);                     /*串口初始化*/
 task_register("HWUSART", comHwProcess, 0);
-task_register("DMA_Tx_Test", DMA_Tx_Test, 100);
+//task_register("DMA_Tx_Test", DMA_Tx_Test, 100);
 
