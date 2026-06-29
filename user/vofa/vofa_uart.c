@@ -123,21 +123,6 @@ void uartCMDRecv(uint8_t byte_data) //此函数放在串口中断中
 }
 
 /**
-* @brief 串口接收中断
-*/
-void USART3_IRQHandler(void)
-{
-    if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
-    {
-        uint8_t byte_data = USART_ReceiveData(USART3);
-        uartCMDRecv(byte_data);
-    }
-    if(USART_GetITStatus(USART3, USART_IT_IDLE) != RESET)
-    {
-        uint8_t byte_data = USART_ReceiveData(USART3); //读DR清除中断标志
-    }
-}
-/**
 * @brief vofa命令帧解析
 */
 vofaCommand* vofaCommandParse(void)
